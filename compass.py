@@ -9,7 +9,7 @@
 import json
 import operator
 import sys
-import os.path
+import os
 from optparse import OptionParser, OptionGroup
 import urllib
 import re
@@ -115,7 +115,7 @@ class RelayStats(object):
     @property
     def data(self):
         if not self._data:
-            self._data = json.load(file('details.json'))
+            self._data = json.load(file(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')))
         return self._data
 
     @property
