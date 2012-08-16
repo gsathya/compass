@@ -1,0 +1,48 @@
+tor-relay-stats.py
+==================
+
+This script extract some statistics about relays using aggregate data
+based on the current consensus.
+
+Usage
+-----
+
+Run the script with --help to learn about its usage:
+
+  ./tor-relays-stats.py -h
+
+Examples:
+
+ - To get the top five exit nodes in France:
+   ./tor-relays-stats.py --top=5 --exits-only --country=fr
+ - To get weights of the top ten AS of all relays in Germany:
+   ./tor-relays-stats.py --top=10 --by-as --country=de
+
+Retrieving the data
+-------------------
+
+This script expect to have a file called 'details.json' in the
+current directory. Run with the --download option or issue the following
+command to obtain that file:
+
+    curl -o details.json 'https://onionoo.torproject.org/details?type=relay&running=true'
+
+Dependencies
+------------
+
+Written and tested on Python 2.6.6.
+
+Authors
+-------
+
+ * delber <delber@riseup.net>
+ * Karsten Loesing <karsten@torproject.org>
+
+Licence
+-------
+
+This program is free software. It comes without any warranty, to
+the extent permitted by applicable law. You can redistribute it
+and/or modify it under the terms of the Do What The Fuck You Want
+To Public License, Version 2, as published by Sam Hocevar. See
+http://sam.zoy.org/wtfpl/COPYING for more details.
