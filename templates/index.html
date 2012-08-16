@@ -1,0 +1,165 @@
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>Tor Metrics</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Tor relay stats">
+    <meta name="author" content="Sathyanarayanan Gunasekaran">
+
+    <!-- Le styles -->
+    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+    <style type="text/css">
+      body {
+        padding-top: 60px;
+        padding-bottom: 40px;
+      }
+    </style>
+
+    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
+    <!--[if lt IE 9]>
+      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+
+  <body>
+
+    <div class="navbar navbar-fixed-top">
+      <div class="navbar-inner">
+        <div class="container">
+          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </a>
+          <a class="brand" href="{{
+        url_for('index') }}">Tor Metrics</a>
+          <div class="nav-collapse">
+            <ul class="nav">
+              <li class="active"><a href="{{
+        url_for('index') }}">Home</a></li>
+              <li><a href="https://trac.torproject.org/projects/tor/ticket/6498">Trac
+              Ticket #6498</a></li>
+            </ul>
+          </div><!--/.nav-collapse -->
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+      <div class="hero-unit">
+        <form class="form-horizontal" action="{{ url_for('result') }}"
+              method=get id="form">
+          <fieldset>
+            <legend>Tor Relay Stats</legend>
+            <div class="control-group">
+              <h3> Filter </h3>
+              <label class="control-label" for="inactive">Inactive</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="inactive" value="True" name="inactive">
+                  include relays in selection that aren't currently running </label>
+            </div>
+            <label class="control-label" for="guards">Guards</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="guards" value="True" name="guards_only">
+                 select only relays suitable for guard position
+              </label>
+            </div>
+            <label class="control-label" for="exit">Exits</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="exit" value="True" name="exits_only">
+                  select only relays suitable for exit position</label>
+            </div>
+            <label class="control-label" for="fastExit">Fast
+            Exit Nodes</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="fastExit" value="True" name="fast_exits_only">
+                  select only 100+ Mbit/s exits allowing ports 80,
+                  443, 554, and 1755
+              </label>
+            </div>
+            <label class="control-label" for="family">Family</label>
+              <div class="controls">
+                <input type="text" class="input-xlarge" id="family" name="family"
+                       placeholder="A59E1E7C7EAEE083D756EE1FF6EC31CA3D8651D7">
+                  <span class="help-inline">Select family by fingerprint or nickname</span>
+              </div>              
+            <label class="control-label" for="asNo">AS Number</label>
+              <div class="controls">
+                <input type="text" class="input-xlarge" id="asNo" name="ases"
+                       placeholder="AS39138">
+                  <span class="help-inline">select only relays from AS number</span>
+              </div>              
+            <label class="control-label" for="cc">Country Code</label>
+              <div class="controls">
+                <input type="text" class="input-xlarge" id="cc" name="country"
+                       placeholder="de">
+                  <span class="help-inline">select only relays from country with code</span>
+              </div>              
+            </div>
+            <div class="control-group">
+              <h3> Group </h3>
+              <label class="control-label" for="country">Country</label>
+            <div class="controls">
+              <label class="checkbox">
+                <input type="checkbox" id="country" value="True" name="by_country">
+                 group relays by country </label>
+            </div>
+              <label class="control-label" for="as">AS</label>
+            <div class="controls">
+                <input type="checkbox" id="as" value="True" name="by_as">
+                 group relays by AS </label>
+            </div>
+            </div>
+
+            <div class="control-group">
+              <h3> Display </h3>
+            <label class="control-label" for="top">Number of results</label>
+              <div class="controls">
+                <input type="text" class="input-xlarge" id="top" name="top"
+                       placeholder="10" value="10">
+                  <span class="help-inline">display only the top results</span>
+              </div>
+            </div>
+            <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Submit</button>
+            <button class="btn" type=reset>Cancel</button>
+          </div>
+          </fieldset>
+        </form>
+      </div>
+      
+      <hr>
+
+      <footer>
+        <p>&copy; Torproject</p>
+      </footer>
+
+    </div> <!-- /container -->
+
+    <!-- Le javascript
+    ================================================== -->
+    <!-- Placed at the end of the document so the pages load faster
+    -->
+    <script src="{{ url_for('static', filename='js/jquery-1.8.0.min.js') }}"></script>
+    <script>
+      var myForm = document.getElementById('form');
+
+      myForm.onsubmit = function() {
+         var allInputs = myForm.getElementsByTagName('input');
+         var input, i;
+         
+         for(i = 0; input = allInputs[i]; i++) {
+            if(input.getAttribute('name') && !input.value) {
+               input.setAttribute('name', '');
+            }
+         }
+      };
+      </script>
+  </body>
+</html>
