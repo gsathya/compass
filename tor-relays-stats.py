@@ -182,8 +182,8 @@ class RelayStats(object):
                 group_weights = tuple(sum(x) for x in zip(group_weights, weights))
                 nickname = relay['nickname']
                 fingerprint = relay['fingerprint'] if not links else "https://atlas.torproject.org/#details/%s" % relay['fingerprint']
-                exit = 'Exit' if 'Exit' in set(relay['flags']) else ''
-                guard = 'Guard' if 'Guard' in set(relay['flags']) else ''
+                exit = 'Exit' if 'Exit' in set(relay['flags']) else '-'
+                guard = 'Guard' if 'Guard' in set(relay['flags']) else '-'
                 country = relay.get('country', '')
                 as_number = relay.get('as_number', '')
                 as_name = relay.get('as_name', '')
@@ -216,13 +216,14 @@ class RelayStats(object):
         return sorted_groups
 
     def print_groups(self, sorted_groups, count=10, by_country=False, by_as_number=False, short=False, links=False):
+        output_string = []
         if links:
-            print "       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit Guard CC AS_num    AS_name"[:short]
+            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit Guard CC AS_num    AS_name"[:short])
         else:
-            print "       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit Guard CC AS_num    AS_name"[:short]
+            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit Guard CC AS_num    AS_name"[:short])
         if count < 0: count = len(sorted_groups)
         for formatted_group, weight in sorted_groups[:count]:
-            print formatted_group[:short]
+            output_string.append(formatted_group[:short])
         if len(sorted_groups) > count:
             if by_country and by_as_number:
                 type = "countries and ASes"
@@ -235,18 +236,19 @@ class RelayStats(object):
             other_weights = (0, 0, 0, 0, 0)
             for _, weights in sorted_groups[count:]:
                 other_weights = tuple(sum(x) for x in zip(other_weights, weights))
-            print "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (%d other %s)" % (
+            output_string.append("%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (%d other %s)" % (
                   other_weights[0] * 100.0, other_weights[1] * 100.0,
                   other_weights[2] * 100.0, other_weights[3] * 100.0,
-                  other_weights[4] * 100.0, len(sorted_groups) - count, type)
+                  other_weights[4] * 100.0, len(sorted_groups) - count, type))
         selection_weights = (0, 0, 0, 0, 0)
         for _, weights in sorted_groups:
             selection_weights = tuple(sum(x) for x in zip(selection_weights, weights))
         if len(sorted_groups) > 1 and selection_weights[0] < 0.999:
-            print "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (total in selection)" % (
+            output_string.append("%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (total in selection)" % (
                   selection_weights[0] * 100.0, selection_weights[1] * 100.0,
                   selection_weights[2] * 100.0, selection_weights[3] * 100.0,
-                  selection_weights[4] * 100.0)
+                  selection_weights[4] * 100.0))
+        return output_string
 
 def create_option_parser():
     parser = OptionParser()
@@ -313,8 +315,9 @@ if '__main__' == __name__:
                     by_country=options.by_country,
                     by_as_number=options.by_as,
                     links=options.links)
-    stats.print_groups(sorted_groups, options.top,
+    output_string = stats.print_groups(sorted_groups, options.top,
                        by_country=options.by_country,
                        by_as_number=options.by_as,
                        short=70 if options.short else None,
                        links=options.links)
+    print '\n'.join(output_string)
