@@ -27,11 +27,11 @@ sys.path.append('/path/to/app')
 from app import app as application
 
 $ cat /etc/apache2/sites-available/default
-WSGIDaemonProcess yourapplication user=nobody group=nogroup threads=5
-WSGIScriptAlias /test/ /path/to/app.wsgi
+WSGIDaemonProcess compass user=nobody group=compass threads=5
+WSGIScriptAlias /compass /srv/compass.torproject.org/compass/app.wsgi
 
-<Directory /path/to/app>
-    WSGIProcessGroup yourapplication
+<Directory /srv/compass.torproject.org/compass>
+    WSGIProcessGroup compass
     WSGIApplicationGroup %{GLOBAL}
     Order deny,allow
     Allow from all
