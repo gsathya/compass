@@ -83,7 +83,7 @@
               <td>{{ result.fp }}</td>
               {% else %}
                 <td><a href="https://atlas.torproject.org/#details/{{
-              result.fp }}">{{ result.fp }}</a></td>
+              result.fp }}">{{ result.fp[:8] }}</a></td>
               {% endif %}
               <td>{{ result.exit }}</td>
               <td>{{ result.guard }}</td>

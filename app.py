@@ -69,7 +69,7 @@ def parse(output_string, grouping=False, sort_key=None):
             result.p_middle = values[3]
             result.p_exit = values[4]
             result.nick = values[5]
-            result.fp = values[6][:8]
+            result.fp = values[6]
             result.exit = values[7]
             result.guard = values[8]
             result.cc = values[9]
