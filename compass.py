@@ -21,7 +21,7 @@ class BaseFilter(object):
         pass
 
     def load(self, relays):
-        pass
+        return filter(self.accept, relays)
 
 class RunningFilter(BaseFilter):
     def accept(self, relay):
@@ -81,17 +81,18 @@ class SameNetworkFilter(BaseFilter):
         def __init__(self, relay):
             self.exit = relay.get('exit_probability')
             self.fp = relay.get('fingerprint')
+            self.relay = relay
     
     def __init__(self):
         self.network_data = {}
-        self.relays_fp = []        
+        self.relays = []        
     
     def load(self, all_relays):
         for relay in all_relays:
             or_addresses = relay.get("or_addresses")
             if len(or_addresses) > 1:
                 print "[WARNING] - %s has more than two OR Addresses - %s" % relay.get("fingerprint"), or_addresses
-            for ip in relay.get("or_addresses", []):
+            for ip in or_addresses:
                 ip, port = ip.rsplit(':', 1)
                 # skip if ipv6
                 if ':' in ip:
@@ -116,10 +117,10 @@ class SameNetworkFilter(BaseFilter):
                     self.network_data[network] = [relay_info]
 
         for relay_list in self.network_data.values():
-            for relay in relay_list:
-                self.relays_fp.append(relay.fp)
-
-    def accept(self, relay):        
+            self.relays.extend([relay.relay for relay in relay_list])
+        return self.relays
+    
+    def accept(self, relay):
         return relay.get('fingerprint') in self.relays_fp
     
 class GuardFilter(BaseFilter):
@@ -181,9 +182,8 @@ class RelayStats(object):
         self._relays = {}
         relays = self.data['relays']
         for f in self._filters:
-            f.load(relays)
-            relays = filter(f.accept, relays)
-
+            relays = f.load(relays)
+        
         for relay in relays:
             self.add_relay(relay)
         return self._relays
