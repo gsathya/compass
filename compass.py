@@ -130,14 +130,12 @@ class RelayStats(object):
             return self._relays
 
         self._relays = {}
-        for relay in self.data['relays']:
-            accepted = True
-            for f in self._filters:
-                if not f.accept(relay):
-                    accepted = False
-                    break
-            if accepted:
-                self.add_relay(relay)
+        relays = self.data['relays']
+        for f in self._filters:
+            relays = filter(f.accept, relays)
+
+        for relay in relays:
+            self.add_relay(relay)
         return self._relays
 
     def _create_filters(self, options):
