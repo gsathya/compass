@@ -78,19 +78,25 @@ class GuardFilter(BaseFilter):
         return relay.get('guard_probability', -1) > 0.0
 
 class FastExitFilter(BaseFilter):
+    def __init__(self, bandwidth_rate, advertised_bandwidth, ports, inverse=False):
+        self.bandwidth_rate = bandwidth_rate
+        self.advertised_bandwidth = advertised_bandwidth
+        self.ports = ports
+        self.inverse = inverse
+    
     def accept(self, relay):
-        if relay.get('bandwidth_rate', -1) < 12500 * 1024:
-            return False
-        if relay.get('advertised_bandwidth', -1) < 5000 * 1024:
-            return False
-        relevant_ports = set([80, 443, 554, 1755])
+        if relay.get('bandwidth_rate', -1) < self.bandwidth_rate:
+            return self.inverse
+        if relay.get('advertised_bandwidth', -1) < self.advertised_bandwidth:
+            return self.inverse
+        relevant_ports = set(self.ports)
         summary = relay.get('exit_policy_summary', {})
         if 'accept' in summary:
             portlist = summary['accept']
         elif 'reject' in summary:
             portlist = summary['reject']
         else:
-            return False
+            return self.inverse
         ports = []
         for p in portlist:
             if '-' in p:
@@ -100,10 +106,10 @@ class FastExitFilter(BaseFilter):
                 ports.append(int(p))
         policy_ports = set(ports)
         if 'accept' in summary and not relevant_ports.issubset(policy_ports):
-            return False
+            return self.inverse
         if 'reject' in summary and not relevant_ports.isdisjoint(policy_ports):
-            return False
-        return True
+            return self.inverse
+        return not self.inverse
 
 class RelayStats(object):
     def __init__(self, options):
@@ -149,7 +155,7 @@ class RelayStats(object):
         if options.guards_only:
             filters.append(GuardFilter())
         if options.fast_exits_only:
-            filters.append(FastExitFilter())
+            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False))
         return filters
 
     def _get_group_function(self, options):
