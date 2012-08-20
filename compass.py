@@ -20,6 +20,9 @@ class BaseFilter(object):
     def accept(self, relay):
         pass
 
+    def load(self, relays):
+        pass
+
 class RunningFilter(BaseFilter):
     def accept(self, relay):
         return relay['running']
@@ -132,6 +135,7 @@ class RelayStats(object):
         self._relays = {}
         relays = self.data['relays']
         for f in self._filters:
+            f.load(relays)
             relays = filter(f.accept, relays)
 
         for relay in relays:
