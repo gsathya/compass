@@ -289,7 +289,7 @@ def create_option_parser():
 
 def download_details_file():
     url = urllib.urlopen('https://onionoo.torproject.org/details?type=relay')
-    details_file = open("details.json", 'w')
+    details_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json'), 'w')
     details_file.write(url.read())
     url.close()
     details_file.close()
@@ -307,7 +307,7 @@ if '__main__' == __name__:
         print "Downloaded details.json.  Re-run without --download option."
         exit()
 
-    if not os.path.exists('details.json'):
+    if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')):
         parser.error("Did not find details.json.  Re-run with --download.")
 
     stats = RelayStats(options)
