@@ -76,6 +76,52 @@ class ExitFilter(BaseFilter):
     def accept(self, relay):
         return relay.get('exit_probability', -1) > 0.0
 
+class SameNetworkFilter(BaseFilter):
+    class Relay(object):
+        def __init__(self, relay):
+            self.exit = relay.get('exit_probability')
+            self.fp = relay.get('fingerprint')
+    
+    def __init__(self):
+        self.network_data = {}
+        self.relays_fp = []        
+    
+    def load(self, all_relays):
+        for relay in all_relays:
+            or_addresses = relay.get("or_addresses")
+            if len(or_addresses) > 1:
+                print "[WARNING] - %s has more than two OR Addresses - %s" % relay.get("fingerprint"), or_addresses
+            for ip in relay.get("or_addresses", []):
+                ip, port = ip.rsplit(':', 1)
+                # skip if ipv6
+                if ':' in ip:
+                    continue
+                network = ip.rsplit('.', 1)[0]
+                relay_info = self.Relay(relay)
+                if self.network_data.has_key(network):
+                    if len(self.network_data[network]) > 1:
+                        # assume current relay to have smallest exit_probability
+                        min_exit = relay.get('exit_probability')
+                        min_id = -1
+                        for id, value in enumerate(self.network_data[network]):
+                            if value.exit < min_exit:
+                                min_exit = value.exit
+                                min_id = id
+                        if min_id != -1:
+                            del self.network_data[network][min_id]
+                            self.network_data[network].append(relay_info)
+                    else:
+                        self.network_data[network].append(relay_info)
+                else:
+                    self.network_data[network] = [relay_info]
+
+        for relay_list in self.network_data.values():
+            for relay in relay_list:
+                self.relays_fp.append(relay.fp)
+
+    def accept(self, relay):        
+        return relay.get('fingerprint') in self.relays_fp
+    
 class GuardFilter(BaseFilter):
     def accept(self, relay):
         return relay.get('guard_probability', -1) > 0.0
@@ -158,6 +204,7 @@ class RelayStats(object):
             filters.append(GuardFilter())
         if options.fast_exits_only:
             filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False))
+            filters.append(SameNetworkFilter())
         return filters
 
     def _get_group_function(self, options):
