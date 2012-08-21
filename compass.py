@@ -205,6 +205,10 @@ class RelayStats(object):
         if options.fast_exits_only:
             filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False))
             filters.append(SameNetworkFilter())
+        if options.almost_fast_exits_only:
+            filters.append(FastExitFilter(80 * 125 * 1024, 2000 * 1024, [80, 443], False))
+            filters.append(SameNetworkFilter())
+            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True))
         return filters
 
     def _get_group_function(self, options):
@@ -325,6 +329,8 @@ def create_option_parser():
                      help="select only relays suitable for guard position")
     group.add_option("-x", "--fast-exits-only", action="store_true",
                      help="select only 100+ Mbit/s exits allowing ports 80, 443, 554, and 1755")
+    group.add_option("-w", "--almost-fast-exits-only", action="store_true",
+                     help="select only 80+ & 95- Mbit/s exits allowing ports 80, 443, 554, and 1755")
     parser.add_option_group(group)
     group = OptionGroup(parser, "Grouping options")
     group.add_option("-A", "--by-as", action="store_true", default=False,
