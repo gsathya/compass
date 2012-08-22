@@ -90,13 +90,15 @@ class SameNetworkFilter(BaseFilter):
     def load(self, all_relays):
         for relay in all_relays:
             or_addresses = relay.get("or_addresses")
-            if len(or_addresses) > 1:
-                print "[WARNING] - %s has more than two OR Addresses - %s" % relay.get("fingerprint"), or_addresses
+            no_of_addresses = 0
             for ip in or_addresses:
                 ip, port = ip.rsplit(':', 1)
                 # skip if ipv6
                 if ':' in ip:
                     continue
+                no_of_addresses += 1
+                if no_of_addresses > 1:
+                    print "[WARNING] - %s has more than two OR Addresses - %s" % relay.get("fingerprint"), or_addresses
                 network = ip.rsplit('.', 1)[0]
                 relay_info = self.Relay(relay)
                 if self.network_data.has_key(network):
