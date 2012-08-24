@@ -76,119 +76,101 @@ class ExitFilter(BaseFilter):
     def accept(self, relay):
         return relay.get('exit_probability', -1) > 0.0
 
-class SameNetworkFilter(BaseFilter):
-    class Relay(object):
-        def __init__(self, relay):
-            self.exit = relay.get('exit_probability')
-            self.fp = relay.get('fingerprint')
-            self.relay = relay
-    
-    def __init__(self):
-        self.network_data = {}
-        self.relays = []        
-    
-    def load(self, all_relays):
-        for relay in all_relays:
-            or_addresses = relay.get("or_addresses")
-            no_of_addresses = 0
-            for ip in or_addresses:
-                ip, port = ip.rsplit(':', 1)
-                # skip if ipv6
-                if ':' in ip:
-                    continue
-                no_of_addresses += 1
-                if no_of_addresses > 1:
-                    print "[WARNING] - %s has more than two OR Addresses - %s" % relay.get("fingerprint"), or_addresses
-                network = ip.rsplit('.', 1)[0]
-                relay_info = self.Relay(relay)
-                if self.network_data.has_key(network):
-                    if len(self.network_data[network]) > 1:
-                        # assume current relay to have smallest exit_probability
-                        min_exit = relay.get('exit_probability')
-                        min_id = -1
-                        for id, value in enumerate(self.network_data[network]):
-                            if value.exit < min_exit:
-                                min_exit = value.exit
-                                min_id = id
-                        if min_id != -1:
-                            del self.network_data[network][min_id]
-                            self.network_data[network].append(relay_info)
-                    else:
-                        self.network_data[network].append(relay_info)
-                else:
-                    self.network_data[network] = [relay_info]
-
-        for relay_list in self.network_data.values():
-            self.relays.extend([relay.relay for relay in relay_list])
-        return self.relays
-    
-    def accept(self, relay):
-        return relay.get('fingerprint') in self.relays_fp
-    
 class GuardFilter(BaseFilter):
     def accept(self, relay):
         return relay.get('guard_probability', -1) > 0.0
 
 class FastExitFilter(BaseFilter):
-    def __init__(self, bandwidth_rate, advertised_bandwidth, ports, inverse=False):
+
+    class Relay(object):
+        def __init__(self, relay):
+            self.exit = relay.get('exit_probability')
+            self.fp = relay.get('fingerprint')
+            self.relay = relay
+
+    def __init__(self, bandwidth_rate, advertised_bandwidth, ports, same_network, inverse=False):
         self.bandwidth_rate = bandwidth_rate
         self.advertised_bandwidth = advertised_bandwidth
         self.ports = ports
+        self.same_network = same_network
         self.inverse = inverse
-    
-    def accept(self, relay):
-        if relay.get('bandwidth_rate', -1) < self.bandwidth_rate:
-            return self.inverse
-        if relay.get('advertised_bandwidth', -1) < self.advertised_bandwidth:
-            return self.inverse
-        relevant_ports = set(self.ports)
-        summary = relay.get('exit_policy_summary', {})
-        if 'accept' in summary:
-            portlist = summary['accept']
-        elif 'reject' in summary:
-            portlist = summary['reject']
-        else:
-            return self.inverse
-        ports = []
-        for p in portlist:
-            if '-' in p:
-                ports.extend(range(int(p.split('-')[0]),
-                                   int(p.split('-')[1]) + 1))
+
+    def load(self, all_relays):
+
+        # First, filter relays based on bandwidth and port requirements.
+        matching_relays = []
+        for relay in all_relays:
+            if relay.get('bandwidth_rate', -1) < self.bandwidth_rate:
+                continue
+            if relay.get('advertised_bandwidth', -1) < self.advertised_bandwidth:
+                continue
+            relevant_ports = set(self.ports)
+            summary = relay.get('exit_policy_summary', {})
+            if 'accept' in summary:
+                portlist = summary['accept']
+            elif 'reject' in summary:
+                portlist = summary['reject']
             else:
-                ports.append(int(p))
-        policy_ports = set(ports)
-        if 'accept' in summary and not relevant_ports.issubset(policy_ports):
-            return self.inverse
-        if 'reject' in summary and not relevant_ports.isdisjoint(policy_ports):
-            return self.inverse
-        return not self.inverse
+                continue
+            ports = []
+            for p in portlist:
+                if '-' in p:
+                    ports.extend(range(int(p.split('-')[0]),
+                                       int(p.split('-')[1]) + 1))
+                else:
+                    ports.append(int(p))
+            policy_ports = set(ports)
+            if 'accept' in summary and not relevant_ports.issubset(policy_ports):
+                continue
+            if 'reject' in summary and not relevant_ports.isdisjoint(policy_ports):
+                continue
+            matching_relays.append(relay)
 
-class AlmostFastExitFilter(BaseFilter):    
-    def load(self, relays):
-        exit_filter = FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False)
-        fast_relays = exit_filter.load(relays)
-        same_network_filter = SameNetworkFilter()
-        fast_relays_with_network_restriction = same_network_filter.load(fast_relays)
-        almost_exit_filter = FastExitFilter(80* 125* 1024, 2000 * 1024, [80, 443], False)
-        almost_fast_relays = almost_exit_filter.load(relays)
-        almost_exit_filter = FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True)
-        almost_fast_relays = almost_exit_filter.load(almost_fast_relays)
-        diffed_relays = self.diff(fast_relays, fast_relays_with_network_restriction)
-        return self.union(diffed_relays, almost_fast_relays)
-    
-    def diff(self, relays_a, relays_b):
-        relays_a = dict([(relay.get('fingerprint'), relay) for relay in relays_a])
-        relays_b = dict([(relay.get('fingerprint'), relay) for relay in relays_b])
-        total_relays = dict(relays_a.items() + relays_b.items())
-        set_diff = set(relays_a.keys()) - set(relays_b.keys())
-        return [total_relays[fp] for fp in set_diff]
+        # Second, filter relays based on same /24 requirement.
+        if self.same_network:
+            network_data = {}
+            for relay in matching_relays:
+                or_addresses = relay.get("or_addresses")
+                no_of_addresses = 0
+                for ip in or_addresses:
+                    ip, port = ip.rsplit(':', 1)
+                    # skip if ipv6
+                    if ':' in ip:
+                        continue
+                    no_of_addresses += 1
+                    if no_of_addresses > 1:
+                        print "[WARNING] - %s has more than one IPv4 OR address - %s" % relay.get("fingerprint"), or_addresses
+                    network = ip.rsplit('.', 1)[0]
+                    relay_info = self.Relay(relay)
+                    if network_data.has_key(network):
+                        if len(network_data[network]) > 1:
+                            # assume current relay to have smallest exit_probability
+                            min_exit = relay.get('exit_probability')
+                            min_id = -1
+                            for id, value in enumerate(network_data[network]):
+                                if value.exit < min_exit:
+                                    min_exit = value.exit
+                                    min_id = id
+                            if min_id != -1:
+                                del network_data[network][min_id]
+                                network_data[network].append(relay_info)
+                        else:
+                            network_data[network].append(relay_info)
+                    else:
+                        network_data[network] = [relay_info]
+            matching_relays = []
+            for relay_list in network_data.values():
+                matching_relays.extend([relay.relay for relay in relay_list])
 
-    def union(self, relays_a, relays_b):
-        relays_a = dict([(relay.get('fingerprint'), relay) for relay in relays_a])
-        relays_b = dict([(relay.get('fingerprint'), relay) for relay in relays_b])
-        total_relays = dict(relays_a.items() + relays_b.items())
-        set_union = set(relays_a.keys()) | set(relays_b.keys())
-        return [total_relays[fp] for fp in set_union]
+        # Either return relays meeting all requirements, or the inverse set.
+        if self.inverse:
+            inverse_relays = []
+            for relay in all_relays:
+                if relay not in matching_relays:
+                    inverse_relays.append(relay)
+            return inverse_relays
+        else:
+            return matching_relays
 
 class RelayStats(object):
     def __init__(self, options):
@@ -233,10 +215,12 @@ class RelayStats(object):
         if options.guards_only:
             filters.append(GuardFilter())
         if options.fast_exits_only:
-            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False))
-            filters.append(SameNetworkFilter())
+            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True, False))
         if options.almost_fast_exits_only:
-            filters.append(AlmostFastExitFilter())
+            filters.append(FastExitFilter(80 * 125 * 1024, 2000 * 1024, [80, 443], False, False))
+            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True, True))
+        if options.fast_exits_only_any_network:
+            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False, False))
         return filters
 
     def _get_group_function(self, options):
@@ -355,10 +339,12 @@ def create_option_parser():
                      help="select family by fingerprint or nickname (for named relays)")
     group.add_option("-g", "--guards-only", action="store_true",
                      help="select only relays suitable for guard position")
-    group.add_option("-x", "--fast-exits-only", action="store_true",
-                     help="select only 100+ Mbit/s exits allowing ports 80, 443, 554, and 1755")
-    group.add_option("-w", "--almost-fast-exits-only", action="store_true",
-                     help="select only 80+ & 95- Mbit/s exits allowing ports 80, 443, 554, and 1755")
+    group.add_option("--fast-exits-only", action="store_true",
+                     help="select only fast exits (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755, 2- per /24)")
+    group.add_option("--almost-fast-exits-only", action="store_true",
+                     help="select only almost fast exits (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)")
+    group.add_option("--fast-exits-only-any-network", action="store_true",
+                     help="select only fast exits without network restriction (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755")
     parser.add_option_group(group)
     group = OptionGroup(parser, "Grouping options")
     group.add_option("-A", "--by-as", action="store_true", default=False,
@@ -391,6 +377,14 @@ if '__main__' == __name__:
 
     if options.family and not re.match(r'^[A-F0-9]{40}$', options.family) and not re.match(r'^[A-Za-z0-9]{1,19}$', options.family):
         parser.error("Not a valid fingerprint or nickname: %s" % options.family)
+
+    fast_exit_options = 0
+    if options.fast_exits_only: fast_exit_options += 1
+    if options.almost_fast_exits_only: fast_exit_options += 1
+    if options.fast_exits_only_any_network: fast_exit_options += 1
+    if fast_exit_options > 1:
+        parser.error("Can only filter by one fast-exit option.")
+
     if options.download:
         download_details_file()
         print "Downloaded details.json.  Re-run without --download option."
