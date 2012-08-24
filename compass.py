@@ -163,6 +163,33 @@ class FastExitFilter(BaseFilter):
             return self.inverse
         return not self.inverse
 
+class AlmostFastExitFilter(BaseFilter):    
+    def load(self, relays):
+        exit_filter = FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False)
+        fast_relays = exit_filter.load(relays)
+        same_network_filter = SameNetworkFilter()
+        fast_relays_with_network_restriction = same_network_filter.load(fast_relays)
+        almost_exit_filter = FastExitFilter(80* 125* 1024, 2000 * 1024, [80, 443], False)
+        almost_fast_relays = almost_exit_filter.load(relays)
+        almost_exit_filter = FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True)
+        almost_fast_relays = almost_exit_filter.load(almost_fast_relays)
+        diffed_relays = self.diff(fast_relays, fast_relays_with_network_restriction)
+        return self.union(diffed_relays, almost_fast_relays)
+    
+    def diff(self, relays_a, relays_b):
+        relays_a = dict([(relay.get('fingerprint'), relay) for relay in relays_a])
+        relays_b = dict([(relay.get('fingerprint'), relay) for relay in relays_b])
+        total_relays = dict(relays_a.items() + relays_b.items())
+        set_diff = set(relays_a.keys()) - set(relays_b.keys())
+        return [total_relays[fp] for fp in set_diff]
+
+    def union(self, relays_a, relays_b):
+        relays_a = dict([(relay.get('fingerprint'), relay) for relay in relays_a])
+        relays_b = dict([(relay.get('fingerprint'), relay) for relay in relays_b])
+        total_relays = dict(relays_a.items() + relays_b.items())
+        set_union = set(relays_a.keys()) | set(relays_b.keys())
+        return [total_relays[fp] for fp in set_union]
+
 class RelayStats(object):
     def __init__(self, options):
         self._data = None
@@ -180,12 +207,13 @@ class RelayStats(object):
     def relays(self):
         if self._relays:
             return self._relays
-
+        
         self._relays = {}
         relays = self.data['relays']
+        
         for f in self._filters:
             relays = f.load(relays)
-        
+
         for relay in relays:
             self.add_relay(relay)
         return self._relays
@@ -208,9 +236,7 @@ class RelayStats(object):
             filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False))
             filters.append(SameNetworkFilter())
         if options.almost_fast_exits_only:
-            filters.append(FastExitFilter(80 * 125 * 1024, 2000 * 1024, [80, 443], False))
-            filters.append(SameNetworkFilter())
-            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True))
+            filters.append(AlmostFastExitFilter())
         return filters
 
     def _get_group_function(self, options):
