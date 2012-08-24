@@ -12,7 +12,7 @@ class Opt(object):
         self.by_country = False
         self.ases = None
         self.country = None
-        self.top = 10
+        self.top = -1
         self.short = None 
         self.links = None 
         self.guards_only = None
@@ -104,7 +104,7 @@ def result():
             try:
                 options.top = int(value)
             except:
-                options.top = 10
+                options.top = -1
         elif key == "sort":
             sort_key = value
         elif key in ["country", "ases"]:
