@@ -81,7 +81,6 @@ class GuardFilter(BaseFilter):
         return relay.get('guard_probability', -1) > 0.0
 
 class FastExitFilter(BaseFilter):
-
     class Relay(object):
         def __init__(self, relay):
             self.exit = relay.get('exit_probability')
@@ -96,7 +95,6 @@ class FastExitFilter(BaseFilter):
         self.inverse = inverse
 
     def load(self, all_relays):
-
         # First, filter relays based on bandwidth and port requirements.
         matching_relays = []
         for relay in all_relays:
@@ -125,7 +123,6 @@ class FastExitFilter(BaseFilter):
             if 'reject' in summary and not relevant_ports.isdisjoint(policy_ports):
                 continue
             matching_relays.append(relay)
-
         # Second, filter relays based on same /24 requirement.
         if self.same_network:
             network_data = {}
@@ -161,7 +158,6 @@ class FastExitFilter(BaseFilter):
             matching_relays = []
             for relay_list in network_data.values():
                 matching_relays.extend([relay.relay for relay in relay_list])
-
         # Either return relays meeting all requirements, or the inverse set.
         if self.inverse:
             inverse_relays = []
@@ -189,13 +185,10 @@ class RelayStats(object):
     def relays(self):
         if self._relays:
             return self._relays
-        
         self._relays = {}
         relays = self.data['relays']
-        
         for f in self._filters:
             relays = f.load(relays)
-
         for relay in relays:
             self.add_relay(relay)
         return self._relays
@@ -374,25 +367,20 @@ if '__main__' == __name__:
     (options, args) = parser.parse_args()
     if len(args) > 0:
         parser.error("Did not understand positional argument(s), use options instead.")
-
     if options.family and not re.match(r'^[A-F0-9]{40}$', options.family) and not re.match(r'^[A-Za-z0-9]{1,19}$', options.family):
         parser.error("Not a valid fingerprint or nickname: %s" % options.family)
-
     fast_exit_options = 0
     if options.fast_exits_only: fast_exit_options += 1
     if options.almost_fast_exits_only: fast_exit_options += 1
     if options.fast_exits_only_any_network: fast_exit_options += 1
     if fast_exit_options > 1:
         parser.error("Can only filter by one fast-exit option.")
-
     if options.download:
         download_details_file()
         print "Downloaded details.json.  Re-run without --download option."
         exit()
-
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')):
         parser.error("Did not find details.json.  Re-run with --download.")
-
     stats = RelayStats(options)
     sorted_groups = stats.format_and_sort_groups(stats.relays,
                     by_country=options.by_country,
