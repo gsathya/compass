@@ -21,6 +21,8 @@ class Opt(object):
         self.exits_only = False
         self.download = None 
         self.fast_exits_only = False
+        self.fast_exits_only_any_network = False
+        self.all_relays = False
 
 class Result():
     def __init__(self):
@@ -110,6 +112,8 @@ def result():
                 setattr(options, key, [value])
             else:
                 setattr(options, key, None)
+        elif key == "exits":
+            setattr(options, value, True)
         else:
             setattr(options, key, value)
     

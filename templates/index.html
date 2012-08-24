@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -74,15 +73,6 @@
                 <input type="checkbox" id="exit" value="True" name="exits_only">
                   select only relays suitable for exit position</label>
             </div>
-            <label class="control-label" for="fastExit">Fast
-            Exit Nodes</label>
-            <div class="controls">
-              <label class="checkbox">
-                <input type="checkbox" id="fastExit" value="True" name="fast_exits_only">
-                  select only 100+ Mbit/s exits allowing ports 80,
-                  443, 554, and 1755
-              </label>
-            </div>
             <label class="control-label" for="family">Family</label>
               <div class="controls">
                 <input type="text" class="input-xlarge" id="family" name="family"
@@ -102,6 +92,26 @@
                   <span class="help-inline">select only relays from country with code</span>
               </div>              
             </div>
+            <label class="control-label" for="exits">Exits</label>
+            <div class="controls">
+              <label class="radio">
+                <input type="radio" name="exits" id="all_relays" value="all_relays" checked>
+                  All relays
+                </label>
+                <label class="radio">
+                  <input type="radio" name="exits" id="exits_only" value="fast_exits_only">
+                    Fast exit relays (95+ Mbit/s, 5000+ KB/s,
+                    80/443/554/1755, 2 relays per /24)
+                  </label>
+                <label class="radio">
+                  <input type="radio" name="exits" id="almost_fast_relays" value="almost_fast_exits_only">
+                    Almost fast exit relays (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)
+                  </label>
+                <label class="radio">
+                  <input type="radio" name="exits" id="exit_relays_any_nw" value="fast_exits_only_any_network">
+                    Fast exits relays any network (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755)
+                  </label>
+                </div>
             <div class="control-group">
               <h3> Group </h3>
               <label class="control-label" for="country">Country</label>
@@ -150,6 +160,8 @@
     <!-- Placed at the end of the document so the pages load faster
     -->
     <script src="{{ url_for('static', filename='js/jquery-1.8.0.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script>
       var myForm = document.getElementById('form');
 
