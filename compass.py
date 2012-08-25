@@ -248,9 +248,9 @@ class RelayStats(object):
                 fingerprint = relay['fingerprint'] if not links else "https://atlas.torproject.org/#details/%s" % relay['fingerprint']
                 exit = 'Exit' if 'Exit' in set(relay['flags']) else '-'
                 guard = 'Guard' if 'Guard' in set(relay['flags']) else '-'
-                country = relay.get('country', '')
-                as_number = relay.get('as_number', '')
-                as_name = relay.get('as_name', '')
+                country = relay.get('country', '??')
+                as_number = relay.get('as_number', '??')
+                as_name = relay.get('as_name', '??')
                 relays_in_group += 1
             if by_country or by_as_number:
                 nickname = "(%d relays)" % relays_in_group
