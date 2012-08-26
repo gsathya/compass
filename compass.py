@@ -232,7 +232,7 @@ class RelayStats(object):
             self._relays[key] = []
         self._relays[key].append(relay)
 
-    def format_and_sort_groups(self, grouped_relays, by_country=False, by_as_number=False, links=False):
+    def format_and_sort_groups(self, grouped_relays, country=None, ases=None, by_country=False, by_as_number=False, links=False):
         formatted_groups = {}
         for group in grouped_relays.values():
             group_weights = (0, 0, 0, 0, 0)
@@ -257,11 +257,11 @@ class RelayStats(object):
                 fingerprint = "*"
                 exit = "*"
                 guard = "*"
-            if by_country and not by_as_number:
-                as_number = "*"
-                as_name = "*"
-            if by_as_number and not by_country:
-                country = "*"
+                if not by_as_number and not ases:
+                    as_number = "*"
+                    as_name = "*"
+                if not by_country and not country:
+                    country = "*"
             if links:
                 format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-4s %-5s %-2s %-9s %s"
             else:
@@ -383,6 +383,8 @@ if '__main__' == __name__:
         parser.error("Did not find details.json.  Re-run with --download.")
     stats = RelayStats(options)
     sorted_groups = stats.format_and_sort_groups(stats.relays,
+                    country=options.country,
+                    ases=options.ases,
                     by_country=options.by_country,
                     by_as_number=options.by_as,
                     links=options.links)
