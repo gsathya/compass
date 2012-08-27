@@ -67,17 +67,17 @@ def parse(output_string, grouping=False, sort_key=None):
         # TODO: change inaccurate value of 10
         if len(values) > 10:
             result.cw = values[0]
-            result.adv_bw = values[1]
-            result.p_guard = values[2]
-            result.p_middle = values[3]
-            result.p_exit = values[4]
-            result.nick = values[5]
-            result.fp = values[6]
-            result.exit = values[7]
-            result.guard = values[8]
-            result.cc = values[9]
-            result.as_no = values[10]
-            result.as_name = ' '.join(values[11:])
+            result.adv_bw = "%s MB/s (%s)" % (values[1], values[2])
+            result.p_guard = values[3]
+            result.p_middle = values[4]
+            result.p_exit = values[5]
+            result.nick = values[6]
+            result.fp = values[7]
+            result.exit = values[8]
+            result.guard = values[9]
+            result.cc = values[10]
+            result.as_no = values[11]
+            result.as_name = ' '.join(values[12:])
             result.as_name = re.sub(r'\([^)]*\)', '', result.as_name)
             result.as_info = "%s %s" % (result.as_no, result.as_name)
 

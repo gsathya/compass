@@ -235,11 +235,12 @@ class RelayStats(object):
     def format_and_sort_groups(self, grouped_relays, country=None, ases=None, by_country=False, by_as_number=False, links=False):
         formatted_groups = {}
         for group in grouped_relays.values():
-            group_weights = (0, 0, 0, 0, 0)
+            group_weights = (0, 0, 0, 0, 0, 0)
             relays_in_group, exits_in_group, guards_in_group = 0, 0, 0
             ases_in_group = set()
             for relay in group:
                 weights = (relay.get('consensus_weight_fraction', 0),
+                           relay.get('advertised_bandwidth', 0),
                            relay.get('advertised_bandwidth_fraction', 0),
                            relay.get('guard_probability', 0),
                            relay.get('middle_probability', 0),
@@ -273,15 +274,16 @@ class RelayStats(object):
                 if not by_country and not country:
                     country = "*"
             if links:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-5s %-5s %-2s %-9s"
+                format_string = "%8.4f%%  %1.2f  %4.2f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-4s %-5s %-2s %-9s"
             else:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-5s %-5s %-2s %-9s"
+                format_string = "%8.4f%%  %1.2f  %4.2f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-4s %-5s %-2s %-9s"
             formatted_group = format_string % (
                               group_weights[0] * 100.0,
-                              group_weights[1] * 100.0,
+                              group_weights[1] / (1024.0 * 1024.0),
                               group_weights[2] * 100.0,
                               group_weights[3] * 100.0,
                               group_weights[4] * 100.0,
+                              group_weights[5] * 100.0,
                               nickname, fingerprint,
                               exit, guard, country, as_info)
             formatted_groups[formatted_group] = group_weights
@@ -292,9 +294,9 @@ class RelayStats(object):
     def print_groups(self, sorted_groups, count=10, by_country=False, by_as_number=False, short=False, links=False):
         output_string = []
         if links:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit  Guard CC Autonomous System"[:short])
+            output_string.append("       CW  adv_bw(MB/s)   P_guard   P_Middle   P_exit Nickname            Link                                                                           Exit Guard CC Autonomous System"[:short])
         else:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit  Guard CC Autonomous System"[:short])
+            output_string.append("       CW  adv_bw(MB/s)   P_guard   P_Middle   P_exit Nickname            Fingerprint                              Exit Guard CC Autonomous System"[:short])
         if count < 0: count = len(sorted_groups)
         for formatted_group, weight in sorted_groups[:count]:
             output_string.append(formatted_group[:short])
@@ -307,21 +309,21 @@ class RelayStats(object):
                 type = "ASes"
             else:
                 type = "relays"
-            other_weights = (0, 0, 0, 0, 0)
+            other_weights = (0, 0, 0, 0, 0, 0)
             for _, weights in sorted_groups[count:]:
                 other_weights = tuple(sum(x) for x in zip(other_weights, weights))
-            output_string.append("%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (%d other %s)" % (
-                  other_weights[0] * 100.0, other_weights[1] * 100.0,
-                  other_weights[2] * 100.0, other_weights[3] * 100.0,
-                  other_weights[4] * 100.0, len(sorted_groups) - count, type))
+            output_string.append("%8.4f%%        %4.2f%% %8.4f%% %8.4f%% %8.4f%% (%d other %s)" % (
+                  other_weights[0] * 100.0, other_weights[2] * 100.0,
+                  other_weights[3] * 100.0, other_weights[4] * 100.0,
+                  other_weights[5] * 100.0, len(sorted_groups) - count, type))
         selection_weights = (0, 0, 0, 0, 0)
         for _, weights in sorted_groups:
             selection_weights = tuple(sum(x) for x in zip(selection_weights, weights))
         if len(sorted_groups) > 1 and selection_weights[0] < 0.999:
-            output_string.append("%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (total in selection)" % (
-                  selection_weights[0] * 100.0, selection_weights[1] * 100.0,
-                  selection_weights[2] * 100.0, selection_weights[3] * 100.0,
-                  selection_weights[4] * 100.0))
+            output_string.append("%8.4f%%        %4.2f%% %8.4f%% %8.4f%% %8.4f%% (total in selection)" % (
+                  selection_weights[0] * 100.0, selection_weights[2] * 100.0,
+                  selection_weights[3] * 100.0, selection_weights[4] * 100.0,
+                  selection_weights[5] * 100.0))
         return output_string
 
 def create_option_parser():
