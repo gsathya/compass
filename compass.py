@@ -236,7 +236,8 @@ class RelayStats(object):
         formatted_groups = {}
         for group in grouped_relays.values():
             group_weights = (0, 0, 0, 0, 0)
-            relays_in_group = 0
+            relays_in_group, exits_in_group, guards_in_group = 0, 0, 0
+            ases_in_group = set()
             for relay in group:
                 weights = (relay.get('consensus_weight_fraction', 0),
                            relay.get('advertised_bandwidth_fraction', 0),
@@ -246,27 +247,35 @@ class RelayStats(object):
                 group_weights = tuple(sum(x) for x in zip(group_weights, weights))
                 nickname = relay['nickname']
                 fingerprint = relay['fingerprint'] if not links else "https://atlas.torproject.org/#details/%s" % relay['fingerprint']
-                exit = 'Exit' if 'Exit' in set(relay['flags']) else '-'
-                guard = 'Guard' if 'Guard' in set(relay['flags']) else '-'
+                if 'Exit' in set(relay['flags']):
+                    exit = 'Exit'
+                    exits_in_group += 1
+                else:
+                    exit = '-'
+                if 'Guard' in set(relay['flags']):
+                    guard = 'Guard'
+                    guards_in_group += 1
+                else:
+                    guard = '-'
                 country = relay.get('country', '??')
                 as_number = relay.get('as_number', '??')
                 as_name = relay.get('as_name', '??')
                 as_info = "%s %s" %(as_number, as_name)
+                ases_in_group.add(as_info)
                 relays_in_group += 1
             if by_country or by_as_number:
                 nickname = "*"
                 fingerprint = "(%d relays)" % relays_in_group
-                exit = "*"
-                guard = "*"
+                exit = "(%d)" % exits_in_group
+                guard = "(%d)" % guards_in_group
                 if not by_as_number and not ases:
-                    as_number = "*"
-                    as_name = "*"
+                    as_info = "(%s)" % len(ases_in_group)
                 if not by_country and not country:
                     country = "*"
             if links:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-4s %-5s %-2s %-9s"
+                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-5s %-5s %-2s %-9s"
             else:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-4s %-5s %-2s %-9s"
+                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-5s %-5s %-2s %-9s"
             formatted_group = format_string % (
                               group_weights[0] * 100.0,
                               group_weights[1] * 100.0,
@@ -283,9 +292,9 @@ class RelayStats(object):
     def print_groups(self, sorted_groups, count=10, by_country=False, by_as_number=False, short=False, links=False):
         output_string = []
         if links:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit Guard CC Autonomous System"[:short])
+            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit  Guard CC Autonomous System"[:short])
         else:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit Guard CC Autonomous System"[:short])
+            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit  Guard CC Autonomous System"[:short])
         if count < 0: count = len(sorted_groups)
         for formatted_group, weight in sorted_groups[:count]:
             output_string.append(formatted_group[:short])
