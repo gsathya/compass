@@ -58,10 +58,10 @@ def parse(output_string, grouping=False, sort_key=None):
         the elements and delete the last element in the list.
         """
         if grouping:
-            values[5] = "%s %s" % (values[5], values[6])
-            for id in xrange(7, len(values)):
+            values[6] = "%s %s" % (values[6], values[7])
+            for id in xrange(8, len(values)):
                 values[id-1] = values[id]
-            del values[id]
+            del values[-1]
             
         # TODO: change inaccurate value of 10
         if len(values) > 10:

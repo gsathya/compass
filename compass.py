@@ -253,8 +253,8 @@ class RelayStats(object):
                 as_name = relay.get('as_name', '??')
                 relays_in_group += 1
             if by_country or by_as_number:
-                nickname = "(%d relays)" % relays_in_group
-                fingerprint = "*"
+                nickname = "*"
+                fingerprint = "(%d relays)" % relays_in_group
                 exit = "*"
                 guard = "*"
                 if not by_as_number and not ases:

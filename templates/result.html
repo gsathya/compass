@@ -78,7 +78,7 @@
               <td>{{ result.p_exit }}</td>
               <td>{{ result.nick }}</td>
               <!-- this happens when we do groupings-->
-              {% if result.fp == '*' %}
+              {% if "relays" in result.fp %}
               <td>{{ result.fp }}</td>
               {% else %}
                 <td><a href="https://atlas.torproject.org/#details/{{
