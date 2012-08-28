@@ -39,6 +39,7 @@ class Result():
         self.cc = None
         self.as_no = None
         self.as_name = None
+        self.as_info = None
 
 def parse(output_string, grouping=False, sort_key=None):
     results = []
@@ -78,6 +79,7 @@ def parse(output_string, grouping=False, sort_key=None):
             result.as_no = values[10]
             result.as_name = ' '.join(values[11:])
             result.as_name = re.sub(r'\([^)]*\)', '', result.as_name)
+            result.as_info = "%s %s" % (result.as_no, result.as_name)
 
             if sort_key:
                 key = float(getattr(result, sort_key)[:-1])

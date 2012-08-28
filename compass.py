@@ -251,6 +251,7 @@ class RelayStats(object):
                 country = relay.get('country', '??')
                 as_number = relay.get('as_number', '??')
                 as_name = relay.get('as_name', '??')
+                as_info = "%s %s" %(as_number, as_name)
                 relays_in_group += 1
             if by_country or by_as_number:
                 nickname = "*"
@@ -263,9 +264,9 @@ class RelayStats(object):
                 if not by_country and not country:
                     country = "*"
             if links:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-4s %-5s %-2s %-9s %s"
+                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-4s %-5s %-2s %-9s"
             else:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-4s %-5s %-2s %-9s %s"
+                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-4s %-5s %-2s %-9s"
             formatted_group = format_string % (
                               group_weights[0] * 100.0,
                               group_weights[1] * 100.0,
@@ -273,7 +274,7 @@ class RelayStats(object):
                               group_weights[3] * 100.0,
                               group_weights[4] * 100.0,
                               nickname, fingerprint,
-                              exit, guard, country, as_number, as_name)
+                              exit, guard, country, as_info)
             formatted_groups[formatted_group] = group_weights
         sorted_groups = sorted(formatted_groups.iteritems(), key=operator.itemgetter(1))
         sorted_groups.reverse()
@@ -282,9 +283,9 @@ class RelayStats(object):
     def print_groups(self, sorted_groups, count=10, by_country=False, by_as_number=False, short=False, links=False):
         output_string = []
         if links:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit Guard CC AS_num    AS_name"[:short])
+            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit Guard CC Autonomous System"[:short])
         else:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit Guard CC AS_num    AS_name"[:short])
+            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit Guard CC Autonomous System"[:short])
         if count < 0: count = len(sorted_groups)
         for formatted_group, weight in sorted_groups[:count]:
             output_string.append(formatted_group[:short])
