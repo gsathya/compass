@@ -48,7 +48,7 @@
 
     <div class="container">
       <div class="hero-unit">
-        <form class="form-horizontal" action="{{ url_for('result') }}"
+        <form class="form-horizontal" action=""
               method=get id="form">
           <fieldset>
             <legend>Tor Relay Stats</legend>
@@ -146,6 +146,8 @@
       
       <hr>
 
+      <div id="result"></div>
+
       <footer>
         The Tor Project - 2012<br>
         <a href="https://gitweb.torproject.org/compass.git">Source code</a> -
@@ -163,18 +165,20 @@
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script>
-      var myForm = document.getElementById('form');
+      doAjax();
+    var myForm = document.getElementById('form');
 
       myForm.onsubmit = function() {
          var allInputs = myForm.getElementsByTagName('input');
          var input, i;
-         
          for(i = 0; input = allInputs[i]; i++) {
             if(input.getAttribute('name') && !input.value) {
                input.setAttribute('name', '');
             }
          }
       };
-      </script>
+
+
+    </script>
   </body>
 </html>

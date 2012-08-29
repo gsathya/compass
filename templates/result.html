@@ -1,138 +1,43 @@
-
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <title>Tor Metrics</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Tor relay stats">
-    <meta name="author" content="Sathyanarayanan Gunasekaran">
-
-    <!-- Le styles -->
-    <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
-    <style type="text/css">
-      body {
-        padding-top: 60px;
-        padding-bottom: 40px;
-      }
-    </style>
-
-    <!-- Le HTML5 shim, for IE6-8 support of HTML5 elements -->
-    <!--[if lt IE 9]>
-      <script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
-    <![endif]-->
-  </head>
-
-  <body>
-
-    <div class="navbar navbar-fixed-top">
-      <div class="navbar-inner">
-        <div class="container">
-          <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-            <span class="icon-bar"></span>
-          </a>
-          <a class="brand" href="{{
-        url_for('index') }}">Tor Metrics</a>
-          <div class="nav-collapse">
-            <ul class="nav">
-              <li class="active"><a href="{{
-        url_for('index') }}">Home</a></li>
-              <li><a href="https://trac.torproject.org/projects/tor/ticket/6498">Trac
-              Ticket #6498</a></li>
-            </ul>
-          </div><!--/.nav-collapse -->
-        </div>
-      </div>
-    </div>
-
-    <div class="container">
-      <div class="hero-unit">
-        <table class="table table-striped table-condensed table-hover table-bordered">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th><span rel="tooltip" title="Relative bandwidth weight assigned to this relay by the directory authorities">Consensus Weights</span></th>
-              <th><span rel="tooltip" title="Relative advertised bandwidth of this relay compared to the total advertised bandwidth in the network">Advertised Bandwidth</span></th>
-              <th><span rel="tooltip" title=" Probability of this relay to be selected for the guard position">Guard Probability</span></th>
-              <th><span rel="tooltip" title="Probability of this relay to be selected for the middle position">Middle Probability</span></th>
-              <th><span rel="tooltip" title="Probability of this relay to be selected for the exit position">Exit Probability</span></th>
-              <th>Nickname</th>
-              <th>Fingerprint</th>
-              <th>Exit</th>
-              <th>Guard</th>
-              <th>Country</th>
-              <th>Autonomous System</th>
-            </tr>
-          </thead>
-          <tbody>
-           {% for result in results %}
-            <tr>
-              <td>{{ loop.index }}</td>
-              <td>{{ result.cw }}</td>
-              <td>{{ result.adv_bw }}</td>
-              <td>{{ result.p_guard }}</td>
-              <td>{{ result.p_middle }}</td>
-              <td>{{ result.p_exit }}</td>
-              <td>{{ result.nick }}</td>
-              <!-- this happens when we do groupings-->
-              {% if "relays" in result.fp %}
-              <td>{{ result.fp }}</td>
-              {% else %}
-                <td><a href="https://atlas.torproject.org/#details/{{
-              result.fp }}">{{ result.fp[:8] }}</a></td>
-              {% endif %}
-              <td>{{ result.exit }}</td>
-              <td>{{ result.guard }}</td>
-              <td>{{ result.cc }}</td>
-              <td>{{ result.as_info }}</td>
-            </tr>
-           {% endfor %}
-          </tbody>
-        </table>
-        <p><a class="btn btn-primary btn-large" href="{{
-        url_for('index') }}">Back &laquo;</a></p>
-      </div>
-      
-      <hr>
-
-      <footer>
-        The Tor Project - 2012<br>
-        <a href="https://gitweb.torproject.org/compass.git">Source code</a> -
-        <a href="https://trac.torproject.org/projects/tor/newticket?component=Compass">Report a bug</a> -
-        <a href="mailto:tor-assistants@lists.torproject.org">Contact</a>
-      </footer>
-
-    </div> <!-- /container -->
-
-    <!-- Le javascript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-
-    <script src="{{ url_for('static', filename='js/jquery-1.8.0.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-tooltip.js') }}"></script>
-
-    <script>
-       $(document).ready(function() {
-           addListener();
-           $('span[rel=tooltip]').tooltip();
-       });
-    </script>
-    <!--
-    <script src="{{ url_for('static', filename='js/bootstrap-transition.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-alert.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-modal.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-dropdown.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-scrollspy.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-tab.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-popover.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-button.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-collapse.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-carousel.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/bootstrap-typeahead.js') }}"></script>
-    -->
-  </body>
-</html>
+<div class="hero-unit">
+  <table class="table table-striped table-condensed table-hover table-bordered">
+    <thead>
+      <tr>
+        <th>#</th>
+        <th><span rel="tooltip" title="Relative bandwidth weight assigned to this relay by the directory authorities">Consensus Weights</span></th>
+        <th><span rel="tooltip" title="Relative advertised bandwidth of this relay compared to the total advertised bandwidth in the network">Advertised Bandwidth</span></th>
+        <th><span rel="tooltip" title=" Probability of this relay to be selected for the guard position">Guard Probability</span></th>
+        <th><span rel="tooltip" title="Probability of this relay to be selected for the middle position">Middle Probability</span></th>
+        <th><span rel="tooltip" title="Probability of this relay to be selected for the exit position">Exit Probability</span></th>
+        <th>Nickname</th>
+        <th>Fingerprint</th>
+        <th>Exit</th>
+        <th>Guard</th>
+        <th>Country</th>
+        <th>Autonomous System</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for result in results %}
+      <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ result.cw }}</td>
+        <td>{{ result.adv_bw }}</td>
+        <td>{{ result.p_guard }}</td>
+        <td>{{ result.p_middle }}</td>
+        <td>{{ result.p_exit }}</td>
+        <td>{{ result.nick }}</td>
+        <!-- this happens when we do groupings-->
+        {% if "relays" in result.fp %}
+        <td>{{ result.fp }}</td>
+        {% else %}
+        <td><a href="https://atlas.torproject.org/#details/{{ result.fp }}">{{ result.fp[:8] }}</a></td>
+        {% endif %}
+        <td>{{ result.exit }}</td>
+        <td>{{ result.guard }}</td>
+        <td>{{ result.cc }}</td>
+        <td>{{ result.as_info }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>

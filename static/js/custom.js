@@ -24,3 +24,18 @@ function parseArgs(query){
     return newQuery;
 }
 
+function doAjax(){
+    var path = window.location.search;
+    if(path) {
+        console.log("Sending request");
+        $.ajax({
+            url: "result"+path,
+            type: "GET",
+        }).done(function(data) {
+            $('#result').append(data);
+            $('html, body').animate({ 
+                scrollTop: $('#result').offset().top
+            }, 1000);
+        });
+    }
+}
