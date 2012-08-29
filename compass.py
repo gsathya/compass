@@ -247,7 +247,7 @@ class RelayStats(object):
                 group_weights = tuple(sum(x) for x in zip(group_weights, weights))
                 nickname = relay['nickname']
                 fingerprint = relay['fingerprint'] if not links else "https://atlas.torproject.org/#details/%s" % relay['fingerprint']
-                if 'Exit' in set(relay['flags']):
+                if 'Exit' in set(relay['flags']) and not 'BadExit' in set(relay['flags']):
                     exit = 'Exit'
                     exits_in_group += 1
                 else:
