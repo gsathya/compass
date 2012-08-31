@@ -63,14 +63,14 @@
             <label class="control-label" for="guards">Guards</label>
             <div class="controls">
               <label class="checkbox">
-                <input type="checkbox" id="guards" value="True" name="guards_only">
+                <input type="checkbox" id="guards_only" value="True" name="guards_only">
                  select only relays suitable for guard position
               </label>
             </div>
-            <label class="control-label" for="exit">Exits</label>
+            <label class="control-label" for="exits_only">Exits</label>
             <div class="controls">
               <label class="checkbox">
-                <input type="checkbox" id="exit" value="True" name="exits_only">
+                <input type="checkbox" id="exits_only" value="True" name="exits_only">
                   select only relays suitable for exit position</label>
             </div>
             <label class="control-label" for="family">Family</label>
@@ -81,13 +81,13 @@
               </div>              
             <label class="control-label" for="asNo">AS Number</label>
               <div class="controls">
-                <input type="text" class="input-xlarge" id="asNo" name="ases"
+                <input type="text" class="input-xlarge" id="ases" name="ases"
                        placeholder="AS39138">
                   <span class="help-inline">select only relays from AS number</span>
               </div>              
             <label class="control-label" for="cc">Country Code</label>
               <div class="controls">
-                <input type="text" class="input-xlarge" id="cc" name="country"
+                <input type="text" class="input-xlarge" id="country" name="country"
                        placeholder="de">
                   <span class="help-inline">select only relays from country with code</span>
               </div>              
@@ -95,20 +95,20 @@
             <label class="control-label" for="exits">Exits</label>
             <div class="controls">
               <label class="radio">
-                <input type="radio" name="exits" id="all_relays" value="all_relays" checked>
+                <input type="radio" class="exits" name="exits" id="all_relays" value="all_relays" checked>
                   All relays
                 </label>
                 <label class="radio">
-                  <input type="radio" name="exits" id="exits_only" value="fast_exits_only">
+                  <input type="radio" class="exits" name="exits" id="fast_exits_only" value="fast_exits_only">
                     Fast exit relays (95+ Mbit/s, 5000+ KB/s,
                     80/443/554/1755, 2 relays per /24)
                   </label>
                 <label class="radio">
-                  <input type="radio" name="exits" id="almost_fast_relays" value="almost_fast_exits_only">
+                  <input type="radio" class="exits" name="exits" id="almost_fast_exits_only" value="almost_fast_exits_only">
                     Almost fast exit relays (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)
                   </label>
                 <label class="radio">
-                  <input type="radio" name="exits" id="exit_relays_any_nw" value="fast_exits_only_any_network">
+                  <input type="radio" class="exits" name="exits" id="fast_exits_only_any_network" value="fast_exits_only_any_network">
                     Fast exits relays any network (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755)
                   </label>
                 </div>
@@ -117,12 +117,12 @@
               <label class="control-label" for="country">Country</label>
             <div class="controls">
               <label class="checkbox">
-                <input type="checkbox" id="country" value="True" name="by_country">
+                <input type="checkbox" id="by_country" value="True" name="by_country">
                  group relays by country </label>
             </div>
               <label class="control-label" for="as">AS</label>
             <div class="controls">
-                <input type="checkbox" id="as" value="True" name="by_as">
+                <input type="checkbox" id="by_as" value="True" name="by_as">
                  group relays by AS </label>
             </div>
             </div>
@@ -165,20 +165,9 @@
     <script src="{{ url_for('static', filename='js/bootstrap.min.js') }}"></script>
     <script src="{{ url_for('static', filename='js/custom.js') }}"></script>
     <script>
+      filterArgs();
       doAjax();
-    var myForm = document.getElementById('form');
-
-      myForm.onsubmit = function() {
-         var allInputs = myForm.getElementsByTagName('input');
-         var input, i;
-         for(i = 0; input = allInputs[i]; i++) {
-            if(input.getAttribute('name') && !input.value) {
-               input.setAttribute('name', '');
-            }
-         }
-      };
-
-
+      setOptions();
     </script>
   </body>
 </html>

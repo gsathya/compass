@@ -10,24 +10,10 @@ function addListener(){
     });
 }
 
-function parseArgs(query){
-    var newQuery = {}, key, value;
-    query = String(query);
-    query = query.split("?")[1];
-    query = query.split("&");
-    $.each(query, function(i, arg){
-        arg = arg.split("=");
-        if (arg[0] != "sort") {
-            newQuery[arg[0]] = arg[1];
-        }
-    });
-    return newQuery;
-}
 
 function doAjax(){
     var path = window.location.search;
     if(path) {
-        console.log("Sending request");
         $.ajax({
             url: "result"+path,
             type: "GET",
@@ -36,6 +22,46 @@ function doAjax(){
             $('html, body').animate({ 
                 scrollTop: $('#result').offset().top
             }, 1000);
+        });
+    }
+}
+
+function filterArgs() {
+    var myForm = document.getElementById('form');
+    var allInputs = myForm.getElementsByTagName('input');
+    var input, i;
+    for(i = 0; input = allInputs[i]; i++) {
+        if(input.getAttribute('name') && !input.value) {
+            input.setAttribute('name', '');
+        }
+    }
+}
+
+function parseArgs(query){
+    var newQuery = {}, key, value;
+    query = String(query);
+    query = query.split("?")[1];
+    query = query.split("&");
+    $.each(query, function(i, arg){
+        arg = arg.split("=");
+        newQuery[arg[0]] = arg[1];
+    });
+    return newQuery;
+}
+
+function setOptions(){
+    var path = window.location.search;
+    if (path) {
+        var args = parseArgs(path);
+        $.each(args, function (arg, value) {
+            type = ($('input.'+arg).attr("type") || $('input#'+arg).attr("type"));
+            if (type == "checkbox" || type == "radio") {
+                $('input.'+arg).val([value]);
+                $('input#'+arg).val([value]);
+            } else if( type == "text") {
+                $('input.'+arg).val(value);
+                $('input#'+arg).val(value);
+            }
         });
     }
 }
