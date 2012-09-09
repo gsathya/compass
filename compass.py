@@ -95,7 +95,9 @@ class FastExitFilter(BaseFilter):
             self.fp = relay.get('fingerprint')
             self.relay = relay
 
-    def __init__(self, bandwidth_rate, advertised_bandwidth, ports):
+    def __init__(self, bandwidth_rate=FAST_EXIT_BANDWIDTH_RATE,
+                 advertised_bandwidth=FAST_EXIT_ADVERTISED_BANDWIDTH,
+                 ports=FAST_EXIT_PORTS):
         self.bandwidth_rate = bandwidth_rate
         self.advertised_bandwidth = advertised_bandwidth
         self.ports = ports
@@ -220,23 +222,15 @@ class RelayStats(object):
         if options.guards_only:
             filters.append(GuardFilter())
         if options.fast_exits_only:
-            filters.append(
-                SameNetworkFilter(
-                    FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
-                                   FAST_EXIT_PORTS)))
+            filters.append(SameNetworkFilter(FastExitFilter()))
         if options.almost_fast_exits_only:
 	    filters.append(
                 FastExitFilter(ALMOST_FAST_EXIT_BANDWIDTH_RATE, ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH,
                                ALMOST_FAST_EXIT_PORTS))
             filters.append(
-                InverseFilter(
-                    SameNetworkFilter(
-                        FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
-                                       FAST_EXIT_PORTS))))
+                InverseFilter(SameNetworkFilter(FastExitFilter())))
         if options.fast_exits_only_any_network:
-            filters.append(
-                FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
-                               FAST_EXIT_PORTS))
+            filters.append(FastExitFilter())
         return filters
 
     def _get_group_function(self, options):
