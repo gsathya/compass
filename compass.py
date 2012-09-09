@@ -13,12 +13,10 @@ import os
 from optparse import OptionParser, OptionGroup
 import urllib
 import re
-from abc import abstractmethod
 
 class BaseFilter(object):
-    @abstractmethod
     def accept(self, relay):
-        pass
+        raise NotImplementedError("This isn't implemented by the subclass")
 
     def load(self, relays):
         return filter(self.accept, relays)
