@@ -26,6 +26,7 @@ class Opt(object):
 
 class Result():
     def __init__(self):
+        self.index = None
         self.cw = None
         self.adv_bw = None
         self.p_guard = None
@@ -66,6 +67,7 @@ def parse(output_string, grouping=False, sort_key=None):
             
         # TODO: change inaccurate value of 10
         if len(values) > 10:
+            result.index = id
             result.cw = values[0]
             result.adv_bw = values[1]
             result.p_guard = values[2]
@@ -89,6 +91,23 @@ def parse(output_string, grouping=False, sort_key=None):
                     sorted_results[key] = [result]
             else:
                 results.append(result)
+        else:
+            result.index = ""
+            result.cw = values[0]
+            result.adv_bw = values[1]
+            result.p_guard = values[2]
+            result.p_middle = values[3]
+            result.p_exit = values[4]
+            result.nick = ""
+            result.fp = ' '.join(values[5:])
+            result.exit = ""
+            result.guard = ""
+            result.cc = ""
+            result.as_no = ""
+            result.as_name = ""
+            result.as_info = ""
+            results.append(result)
+
     return results if results else sorted_results
 
 @app.route('/')
@@ -130,7 +149,6 @@ def result():
                    short=None,
                    links=None)
     results = parse(output_string, options.by_country or options.by_as, sort_key)
-    
     if sort_key:
         for key in sorted(results.iterkeys(), reverse=True):
             for value in results[key]:
@@ -138,7 +156,7 @@ def result():
     else:
         relays = results
     
-    return render_template('result.html', results=relays)
+    return render_template('result.html', results=relays, grouping=options.by_as or options.by_country)
     
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
