@@ -6,6 +6,14 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
+FAST_EXIT_BANDWIDTH_RATE = 95 * 125 * 1024     # 95 Mbit/s
+FAST_EXIT_ADVERTISED_BANDWIDTH = 5000 * 1024   # 5000 kB/s
+FAST_EXIT_PORTS = [80, 443, 554, 1755]
+
+ALMOST_FAST_EXIT_BANDWIDTH_RATE = 80 * 125 * 1024    # 80 Mbit/s
+ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH = 2000 * 1024  # 2000 kB/s
+ALMOST_FAST_EXIT_PORTS = [80, 443]
+
 import json
 import operator
 import sys
@@ -206,12 +214,12 @@ class RelayStats(object):
         if options.guards_only:
             filters.append(GuardFilter())
         if options.fast_exits_only:
-            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True, False))
+            filters.append(FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH, FAST_EXIT_PORTS, True, False))
         if options.almost_fast_exits_only:
-            filters.append(FastExitFilter(80 * 125 * 1024, 2000 * 1024, [80, 443], False, False))
-            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], True, True))
+            filters.append(FastExitFilter(ALMOST_FAST_EXIT_BANDWIDTH_RATE, ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH, ALMOST_FAST_EXIT_PORTS, False, False))
+            filters.append(FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH, FAST_EXIT_PORTS, True, True))
         if options.fast_exits_only_any_network:
-            filters.append(FastExitFilter(95 * 125 * 1024, 5000 * 1024, [80, 443, 554, 1755], False, False))
+            filters.append(FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH, FAST_EXIT_PORTS, False, False))
         return filters
 
     def _get_group_function(self, options):
@@ -341,11 +349,20 @@ def create_option_parser():
     group.add_option("-g", "--guards-only", action="store_true",
                      help="select only relays suitable for guard position")
     group.add_option("--fast-exits-only", action="store_true",
-                     help="select only fast exits (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755, 2- per /24)")
+                     help="select only fast exits (%d+ Mbit/s, %d+ KB/s, %s, 2- per /24)" %
+                          (FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
+                           FAST_EXIT_ADVERTISED_BANDWIDTH / 1024,
+                           '/'.join(map(str, FAST_EXIT_PORTS))))
     group.add_option("--almost-fast-exits-only", action="store_true",
-                     help="select only almost fast exits (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)")
+                     help="select only almost fast exits (%d+ Mbit/s, %d+ KB/s, %s, not in set of fast exits)" %
+                          (ALMOST_FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
+                           ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH / 1024,
+                           '/'.join(map(str, ALMOST_FAST_EXIT_PORTS))))
     group.add_option("--fast-exits-only-any-network", action="store_true",
-                     help="select only fast exits without network restriction (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755")
+                     help="select only fast exits without network restriction (%d+ Mbit/s, %d+ KB/s, %s)" %
+                          (FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
+                           FAST_EXIT_ADVERTISED_BANDWIDTH / 1024,
+                           '/'.join(map(str, FAST_EXIT_PORTS))))
     parser.add_option_group(group)
     group = OptionGroup(parser, "Grouping options")
     group.add_option("-A", "--by-as", action="store_true", default=False,
