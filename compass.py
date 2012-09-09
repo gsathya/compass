@@ -9,6 +9,7 @@
 FAST_EXIT_BANDWIDTH_RATE = 95 * 125 * 1024     # 95 Mbit/s
 FAST_EXIT_ADVERTISED_BANDWIDTH = 5000 * 1024   # 5000 kB/s
 FAST_EXIT_PORTS = [80, 443, 554, 1755]
+FAST_EXIT_MAX_PER_NETWORK = 2
 
 ALMOST_FAST_EXIT_BANDWIDTH_RATE = 80 * 125 * 1024    # 80 Mbit/s
 ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH = 2000 * 1024  # 2000 kB/s
@@ -21,6 +22,7 @@ import os
 from optparse import OptionParser, OptionGroup
 import urllib
 import re
+import itertools
 
 class BaseFilter(object):
     def accept(self, relay):
@@ -93,11 +95,10 @@ class FastExitFilter(BaseFilter):
             self.fp = relay.get('fingerprint')
             self.relay = relay
 
-    def __init__(self, bandwidth_rate, advertised_bandwidth, ports, same_network):
+    def __init__(self, bandwidth_rate, advertised_bandwidth, ports):
         self.bandwidth_rate = bandwidth_rate
         self.advertised_bandwidth = advertised_bandwidth
         self.ports = ports
-        self.same_network = same_network
 
     def load(self, all_relays):
         # First, filter relays based on bandwidth and port requirements.
@@ -128,42 +129,44 @@ class FastExitFilter(BaseFilter):
             if 'reject' in summary and not relevant_ports.isdisjoint(policy_ports):
                 continue
             matching_relays.append(relay)
-        # Second, filter relays based on same /24 requirement.
-        if self.same_network:
-            network_data = {}
-            for relay in matching_relays:
-                or_addresses = relay.get("or_addresses")
-                no_of_addresses = 0
-                for ip in or_addresses:
-                    ip, port = ip.rsplit(':', 1)
-                    # skip if ipv6
-                    if ':' in ip:
-                        continue
-                    no_of_addresses += 1
-                    if no_of_addresses > 1:
-                        print "[WARNING] - %s has more than one IPv4 OR address - %s" % relay.get("fingerprint"), or_addresses
-                    network = ip.rsplit('.', 1)[0]
-                    relay_info = self.Relay(relay)
-                    if network_data.has_key(network):
-                        if len(network_data[network]) > 1:
-                            # assume current relay to have smallest exit_probability
-                            min_exit = relay.get('exit_probability')
-                            min_id = -1
-                            for id, value in enumerate(network_data[network]):
-                                if value.exit < min_exit:
-                                    min_exit = value.exit
-                                    min_id = id
-                            if min_id != -1:
-                                del network_data[network][min_id]
-                                network_data[network].append(relay_info)
-                        else:
-                            network_data[network].append(relay_info)
-                    else:
-                        network_data[network] = [relay_info]
-            matching_relays = []
-            for relay_list in network_data.values():
-                matching_relays.extend([relay.relay for relay in relay_list])
         return matching_relays
+
+class SameNetworkFilter(BaseFilter):
+    def __init__(self, orig_filter, max_per_network=FAST_EXIT_MAX_PER_NETWORK):
+        self.orig_filter = orig_filter
+        self.max_per_network = max_per_network
+
+    def load(self, all_relays):
+        network_data = {}
+        for relay in self.orig_filter.load(all_relays):
+            or_addresses = relay.get("or_addresses")
+            no_of_addresses = 0
+            for ip in or_addresses:
+                ip, port = ip.rsplit(':', 1)
+                # skip if ipv6
+                if ':' in ip:
+                    continue
+                no_of_addresses += 1
+                if no_of_addresses > 1:
+                    print "[WARNING] - %s has more than one IPv4 OR address - %s" % relay.get("fingerprint"), or_addresses
+                network = ip.rsplit('.', 1)[0]
+                if network_data.has_key(network):
+                    if len(network_data[network]) >= FAST_EXIT_MAX_PER_NETWORK:
+                        # assume current relay to have smallest exit_probability
+                        min_exit = relay.get('exit_probability')
+                        min_id = -1
+                        for id, value in enumerate(network_data[network]):
+                            if value.get('exit_probability') < min_exit:
+                                min_exit = value.get('exit_probability')
+                                min_id = id
+                        if min_id != -1:
+                            del network_data[network][min_id]
+                            network_data[network].append(relay)
+                    else:
+                        network_data[network].append(relay)
+                else:
+                    network_data[network] = [relay]
+        return list(itertools.chain.from_iterable(network_data.values()))
 
 class InverseFilter(BaseFilter):
     def __init__(self, orig_filter):
@@ -218,20 +221,22 @@ class RelayStats(object):
             filters.append(GuardFilter())
         if options.fast_exits_only:
             filters.append(
-                FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
-                               FAST_EXIT_PORTS, same_network=True))
+                SameNetworkFilter(
+                    FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
+                                   FAST_EXIT_PORTS)))
         if options.almost_fast_exits_only:
 	    filters.append(
                 FastExitFilter(ALMOST_FAST_EXIT_BANDWIDTH_RATE, ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH,
-                               ALMOST_FAST_EXIT_PORTS, same_network=False))
+                               ALMOST_FAST_EXIT_PORTS))
             filters.append(
                 InverseFilter(
-                    FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
-                                   FAST_EXIT_PORTS, same_network=True)))
+                    SameNetworkFilter(
+                        FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
+                                       FAST_EXIT_PORTS))))
         if options.fast_exits_only_any_network:
             filters.append(
                 FastExitFilter(FAST_EXIT_BANDWIDTH_RATE, FAST_EXIT_ADVERTISED_BANDWIDTH,
-                               FAST_EXIT_PORTS, same_network=False))
+                               FAST_EXIT_PORTS))
         return filters
 
     def _get_group_function(self, options):
@@ -361,10 +366,11 @@ def create_option_parser():
     group.add_option("-g", "--guards-only", action="store_true",
                      help="select only relays suitable for guard position")
     group.add_option("--fast-exits-only", action="store_true",
-                     help="select only fast exits (%d+ Mbit/s, %d+ KB/s, %s, 2- per /24)" %
+                     help="select only fast exits (%d+ Mbit/s, %d+ KB/s, %s, %d- per /24)" %
                           (FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
                            FAST_EXIT_ADVERTISED_BANDWIDTH / 1024,
-                           '/'.join(map(str, FAST_EXIT_PORTS))))
+                           '/'.join(map(str, FAST_EXIT_PORTS)),
+                           FAST_EXIT_MAX_PER_NETWORK))
     group.add_option("--almost-fast-exits-only", action="store_true",
                      help="select only almost fast exits (%d+ Mbit/s, %d+ KB/s, %s, not in set of fast exits)" %
                           (ALMOST_FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
