@@ -26,17 +26,6 @@ function doAjax(){
     }
 }
 
-function filterArgs() {
-    var myForm = document.getElementById('form');
-    var allInputs = myForm.getElementsByTagName('input');
-    var input, i;
-    for(i = 0; input = allInputs[i]; i++) {
-        if(input.getAttribute('name') && !input.value) {
-            input.setAttribute('name', '');
-        }
-    }
-}
-
 function parseArgs(query){
     var newQuery = {}, key, value;
     query = String(query);
