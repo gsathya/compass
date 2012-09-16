@@ -9,6 +9,7 @@
 
     <!-- Le styles -->
     <link href="{{ url_for('static', filename='css/bootstrap.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet">
     <style type="text/css">
       body {
         padding-top: 60px;
@@ -143,9 +144,9 @@
           </fieldset>
         </form>
       </div>
-      
-      <hr>
 
+      <div class="loading"><img src="{{ url_for('static', filename='img/loader.gif') }}" /></div>
+      <hr>
       <div id="result"></div>
 
       <footer>

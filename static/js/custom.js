@@ -14,10 +14,15 @@ function addListener(){
 function doAjax(){
     var path = window.location.search;
     if(path) {
+        $('.loading').show();
+        $('html, body').animate({
+            scrollTop: $('.loading').offset().top
+        }, 1000);
         $.ajax({
             url: "result"+path,
             type: "GET",
         }).done(function(data) {
+            $('.loading').hide();
             $('#result').append(data);
             $('html, body').animate({ 
                 scrollTop: $('#result').offset().top
