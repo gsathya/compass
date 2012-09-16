@@ -27,6 +27,7 @@ function doAjax(){
             $('html, body').animate({ 
                 scrollTop: $('#result').offset().top
             }, 1000);
+            $('span[rel=tooltip]').tooltip();
         });
     }
 }
