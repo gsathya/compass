@@ -19,15 +19,15 @@
     <tbody>
       {% for result in results %}
       <tr>
-        <td>{{ loop.index }}</td>
+        <td>{{ result.index }}</td>
         <td>{{ result.cw }}</td>
         <td>{{ result.adv_bw }}</td>
         <td>{{ result.p_guard }}</td>
         <td>{{ result.p_middle }}</td>
         <td>{{ result.p_exit }}</td>
         <td>{{ result.nick }}</td>
-        <!-- this happens when we do groupings-->
-        {% if "relays" in result.fp %}
+        <!-- it's not a fingerprint -->
+        {% if result.fp|length != 40 %}
         <td>{{ result.fp }}</td>
         {% else %}
         <td><a href="https://atlas.torproject.org/#details/{{ result.fp }}">{{ result.fp[:8] }}</a></td>
