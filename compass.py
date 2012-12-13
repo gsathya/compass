@@ -18,6 +18,7 @@ ALMOST_FAST_EXIT_PORTS = [80, 443]
 import json
 import operator
 import sys
+import util
 import os
 from optparse import OptionParser, OptionGroup
 import urllib
@@ -221,15 +222,16 @@ class RelayStats(object):
             filters.append(ExitFilter())
         if options.guards_only:
             filters.append(GuardFilter())
-        if options.fast_exits_only:
+        if options.exit_filter == 'all_relays':
+            pass
+        elif options.exit_filter == 'fast_exits_only':
             filters.append(SameNetworkFilter(FastExitFilter()))
-        if options.almost_fast_exits_only:
-	    filters.append(
-                FastExitFilter(ALMOST_FAST_EXIT_BANDWIDTH_RATE, ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH,
-                               ALMOST_FAST_EXIT_PORTS))
-            filters.append(
-                InverseFilter(SameNetworkFilter(FastExitFilter())))
-        if options.fast_exits_only_any_network:
+        elif options.exit_filter == 'almost_fast_exits_only':
+            filters.append(FastExitFilter(ALMOST_FAST_EXIT_BANDWIDTH_RATE,
+                                          ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH,
+                                          ALMOST_FAST_EXIT_PORTS))
+            filters.append(InverseFilter(SameNetworkFilter(FastExitFilter())))
+        elif options.exit_filter == 'fast_exits_only_any_network':
             filters.append(FastExitFilter())
         return filters
 
@@ -364,6 +366,9 @@ def create_option_parser():
                      help="select family by fingerprint or nickname (for named relays)")
     group.add_option("-g", "--guards-only", action="store_true",
                      help="select only relays suitable for guard position")
+    group.add_option("--exit-filter",type="choice", dest="exit_filter",
+                     choices=["fast_exits_only","almost_fast_exits_only",
+                              "all_relays","fast_exits_only_any_network"])
     group.add_option("--fast-exits-only", action="store_true",
                      help="select only fast exits (%d+ Mbit/s, %d+ KB/s, %s, %d- per /24)" %
                           (FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
@@ -404,6 +409,32 @@ def download_details_file():
     url.close()
     details_file.close()
 
+def fix_exit_filter_options(options):
+  """
+  Translate the old-style exit filter options into
+  the new format (as received on the front end).
+  """
+  if options.exit_filter != "all_relays":
+    # We just accept this option's value
+    return options
+
+  fast_exit_options = 0
+  if options.fast_exits_only:
+    options.exit_filter = "fast_exits_only"
+    fast_exit_options += 1
+  if options.almost_fast_exits_only:
+    options.exit_filter = "almost_fast_exits_only"
+    fast_exit_options += 1
+  if options.fast_exits_only_any_network:
+    options.exit_filter = "fast_exits_only_any_network"
+    fast_exit_options += 1
+
+  if fast_exit_options > 1:
+    raise Exception
+
+  return options
+
+
 if '__main__' == __name__:
     parser = create_option_parser()
     (options, args) = parser.parse_args()
@@ -411,12 +442,12 @@ if '__main__' == __name__:
         parser.error("Did not understand positional argument(s), use options instead.")
     if options.family and not re.match(r'^[A-F0-9]{40}$', options.family) and not re.match(r'^[A-Za-z0-9]{1,19}$', options.family):
         parser.error("Not a valid fingerprint or nickname: %s" % options.family)
-    fast_exit_options = 0
-    if options.fast_exits_only: fast_exit_options += 1
-    if options.almost_fast_exits_only: fast_exit_options += 1
-    if options.fast_exits_only_any_network: fast_exit_options += 1
-    if fast_exit_options > 1:
+
+    try:
+      fix_exit_filter_options(options)
+    except:
         parser.error("Can only filter by one fast-exit option.")
+
     if options.download:
         download_details_file()
         print "Downloaded details.json.  Re-run without --download option."
@@ -430,6 +461,7 @@ if '__main__' == __name__:
                     by_country=options.by_country,
                     by_as_number=options.by_as,
                     links=options.links)
+
     output_string = stats.print_groups(sorted_groups, options.top,
                        by_country=options.by_country,
                        by_as_number=options.by_as,

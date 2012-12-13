@@ -1,46 +1,45 @@
 import os
 import re
 import compass
-from flask import Flask, request, redirect, render_template, url_for
+from util import Result,Boolean,NullFn,Int,Container
+from flask import Flask, request, jsonify, render_template
 
 app = Flask(__name__)
 
 class Opt(object):
-    def __init__(self):
-        self.by_as = False
-        self.family = None
-        self.by_country = False
-        self.ases = None
-        self.country = None
-        self.top = -1
-        self.short = None 
-        self.links = None 
-        self.guards_only = None
-        self.inactive = False 
-        self.almost_fast_exits_only = None 
-        self.exits_only = False
-        self.download = None 
-        self.fast_exits_only = False
-        self.fast_exits_only_any_network = False
-        self.all_relays = False
+    request_types = {
+      'by_as':Boolean,
+      'by_country':Boolean,
+      'inactive':Boolean,
+      'exits_only':Boolean,
+      'guards_only': Boolean,
+      'links':Boolean,
+      'sort':NullFn,
+      'sort_reverse':Boolean,
+      'top':Int,
+      'family':NullFn,
+      'ases':NullFn,
+      'country':Container,
+      'exit_filter':NullFn
+    }
 
-class Result():
-    def __init__(self):
-        self.index = None
-        self.cw = None
-        self.adv_bw = None
-        self.p_guard = None
-        self.p_exit = None
-        self.p_middle = None
-        self.nick = None
-        self.fp = None
-        self.link = None
-        self.exit = None
-        self.guard = None
-        self.cc = None
-        self.as_no = None
-        self.as_name = None
-        self.as_info = None
+    @staticmethod
+    def convert(key,val):
+      return Opt.request_types[key](val)
+
+    def __str__(self):
+      return repr(self)
+
+    def __repr__(self):
+      return str(self.__dict__)
+
+    def __init__(self,request):
+
+      for key in Opt.request_types:
+        if key in request:
+          setattr(self,key,Opt.convert(key,request[key]))
+        else:
+          setattr(self,key,Opt.convert(key,None))
 
 def parse(output_string, grouping=False, sort_key=None):
     results = []
