@@ -1,7 +1,8 @@
 import os
 import re
 import compass
-from util import Result,Boolean,NullFn,Int,Container
+from util import Result,Boolean,NullFn,Int,Container,ResultEncoder
+import json
 from flask import Flask, request, jsonify, render_template,Response
 
 app = Flask(__name__)
@@ -113,6 +114,23 @@ def parse(output_string, grouping=False, sort_key=None):
 @app.route('/')
 def index():
     return app.open_resource("templates/index.html").read()
+
+@app.route('/result.json', methods=['GET'])
+def json_result():
+    options = Opt(dict(request.args.items()))
+
+    stats = compass.RelayStats(options)
+    results = stats.select_relays(stats.relays,
+                                  by_country=options.by_country,
+                                  by_as_number=options.by_as,
+                                  links=options.links)
+
+
+    relays = stats.sort_and_reduce(results,
+                                   options)
+
+    return Response(json.dumps(relays, cls=ResultEncoder), mimetype='application/json') 
+
 
 
 @app.route('/result', methods=['GET'])
