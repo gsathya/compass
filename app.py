@@ -2,7 +2,7 @@ import os
 import re
 import compass
 from util import Result,Boolean,NullFn,Int,Container
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template,Response
 
 app = Flask(__name__)
 
@@ -109,9 +109,11 @@ def parse(output_string, grouping=False, sort_key=None):
 
     return results if results else sorted_results
 
+
 @app.route('/')
-def index():    
-    return render_template('index.html')
+def index():
+    return app.open_resource("templates/index.html").read()
+
 
 @app.route('/result', methods=['GET'])
 def result():
