@@ -78,28 +78,28 @@
                 <input type="text" class="input-xlarge" id="family" name="family" ng-model="query.family"
                 placeholder="A59E1E7C7EAEE083D756EE1FF6EC31CA3D8651D7">
                 <span class="help-inline">Select family by fingerprint or nickname</span>
-              </div>              
+              </div>
               <label class="control-label" for="asNo">AS Number</label>
               <div class="controls">
                 <input type="text" class="input-xlarge" id="ases" name="ases" ng-model="query.ases"
                 placeholder="AS3320">
                 <span class="help-inline">select only relays from AS number</span>
-              </div>              
+              </div>
               <label class="control-label" for="cc">Country</label>
               <div class="controls">
-                 <select id="country" name="country" ng-model='query.country' 
+                 <select id="country" name="country" ng-model='query.country'
                    ui-select2 multiple data-placeholder="Germany">
                    <option ng-repeat="country in cc_data" value="{{country.id}}" >{{country.text}}</option>
                 </select>
                 <span class="help-inline">select only relays from these countries</span>
-              </div>              
+              </div>
             </div>
             <label class="control-label" for="exits">Exits</label>
             <div class="controls">
               <label class="radio">
-                <input type="radio" class="exits" name="exits" id="all_relays" value="all_relays" 
+                <input type="radio" class="exits" name="exits" id="all_relays" value="all_relays"
                 ng-model='query.exit_filter' checked>
-                All relays
+                All relay
               </label>
               <label class="radio">
                 <input type="radio" class="exits" name="exits" id="fast_exits_only" value="fast_exits_only"
@@ -108,12 +108,12 @@
                 80/443/554/1755, 2 relays per /24)
               </label>
               <label class="radio">
-                <input type="radio" class="exits" name="exits" id="almost_fast_exits_only" 
+                <input type="radio" class="exits" name="exits" id="almost_fast_exits_only"
                 value="almost_fast_exits_only" ng-model="almost_fast_exits_only">
                 Almost fast exit relays (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)
               </label>
               <label class="radio">
-                <input type="radio" class="exits" name="exits" id="fast_exits_only_any_network" 
+                <input type="radio" class="exits" name="exits" id="fast_exits_only_any_network"
                 ng-model="query.exit_filter" value="fast_exits_only_any_network">
                 Fast exits relays any network (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755)
               </label>
@@ -132,6 +132,7 @@
                 group relays by AS </label>
             </div>
           </div>
+
           <div class="control-group">
             <h3> Display </h3>
             <label class="control-label" for="top">Number of results</label>
