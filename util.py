@@ -32,13 +32,13 @@ class Result():
     'exit_probability': 'p_exit',
     }
 
-    def __init__(self):
+    def __init__(self, zero_probs = False):
         self.index = None
-        self.cw = None
-        self.adv_bw = None
-        self.p_guard = None
-        self.p_exit = None
-        self.p_middle = None
+        self.cw = 0.0 if zero_probs else None
+        self.adv_bw = 0.0 if zero_probs else None
+        self.p_guard = 0.0 if zero_probs else None
+        self.p_exit = 0.0 if zero_probs else None
+        self.p_middle = 0.0 if zero_probs else None
         self.nick = None
         self.fp = None
         self.link = None
@@ -57,3 +57,10 @@ class Result():
 
     def jsonify(self):
       return self.__dict__
+
+class ResultEncoder(json.JSONEncoder):
+  def default(self,obj):
+    if isinstance(obj,Result):
+      return obj.__dict__
+    return json.JSONEncoder.default(self,obj)
+
