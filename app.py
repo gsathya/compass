@@ -63,7 +63,7 @@ def parse(output_string, grouping=False, sort_key=None):
             for id in xrange(8, len(values)):
                 values[id-1] = values[id]
             del values[-1]
-            
+
         # TODO: change inaccurate value of 10
         if len(values) > 10:
             result.index = id
@@ -120,7 +120,7 @@ def result():
     options = Opt()
     sort_key = None
     relays = []
-    
+
     for key, value in request.args.items():
         if key == "top":
             try:
@@ -138,7 +138,7 @@ def result():
             setattr(options, value, True)
         else:
             setattr(options, key, value)
-    
+
     stats = compass.RelayStats(options)
     sorted_groups = stats.format_and_sort_groups(stats.relays,
                         by_country=options.by_country,
@@ -156,9 +156,9 @@ def result():
                 relays.append(value)
     else:
         relays = results
-    
+
     return render_template('result.html', results=relays, grouping=options.by_as or options.by_country)
-    
+
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
