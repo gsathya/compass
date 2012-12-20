@@ -40,7 +40,7 @@
             <ul class="nav">
               <li class="active"><a href="/">Home</a></li>
               <li><a href="https://trac.torproject.org/projects/tor/ticket/6498">Trac
-              Ticket #6498</a></li>
+                Ticket #6498</a></li>
             </ul>
           </div><!--/.nav-collapse -->
         </div>
@@ -49,101 +49,106 @@
 
     <div class="container" ng-controller="CompassCtrl">
       <div class="hero-unit">
-        <form class="form-horizontal" action=""
-              method=get id="form">
+        <form class="form-horizontal" id="form">
           <fieldset>
             <legend>Compass</legend>
             <div class="control-group">
               <h3> Filter </h3>
               <label class="control-label" for="inactive">Inactive</label>
-            <div class="controls">
-              <label class="checkbox">
-                <input type="checkbox" id="inactive" value="True" name="inactive" ng-model='inactive'>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" id="inactive" value="True" name="inactive" ng-model='query.inactive'>
                   include relays in selection that aren't currently running </label>
-            </div>
-            <label class="control-label" for="guards">Guards</label>
-            <div class="controls">
-              <label class="checkbox">
-                <input type="checkbox" id="guards_only" value="True" name="guards_only" ng-model='guards_only'>
-                 select only relays suitable for guard position
-              </label>
-            </div>
-            <label class="control-label" for="exits_only">Exits</label>
-            <div class="controls">
-              <label class="checkbox">
-                <input type="checkbox" id="exits_only" value="True" name="exits_only">
+              </div>
+              <label class="control-label" for="guards">Guards</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" id="guards_only" value="True" name="guards_only" ng-model='query.guards_only'>
+                  select only relays suitable for guard position
+                </label>
+              </div>
+              <label class="control-label" for="exits_only">Exits</label>
+              <div class="controls">
+                <label class="checkbox">
+                  <input type="checkbox" id="exits_only" value="True" name="exits_only" ng-model='query.exits_only'>
                   select only relays suitable for exit position</label>
-            </div>
-            <label class="control-label" for="family">Family</label>
+              </div>
+              <label class="control-label" for="family">Family</label>
               <div class="controls">
-                <input type="text" class="input-xlarge" id="family" name="family"
-                       placeholder="A59E1E7C7EAEE083D756EE1FF6EC31CA3D8651D7">
-                  <span class="help-inline">Select family by fingerprint or nickname</span>
+                <input type="text" class="input-xlarge" id="family" name="family" ng-model="query.family"
+                placeholder="A59E1E7C7EAEE083D756EE1FF6EC31CA3D8651D7">
+                <span class="help-inline">Select family by fingerprint or nickname</span>
               </div>              
-            <label class="control-label" for="asNo">AS Number</label>
+              <label class="control-label" for="asNo">AS Number</label>
               <div class="controls">
-                <input type="text" class="input-xlarge" id="ases" name="ases"
-                       placeholder="AS39138">
-                  <span class="help-inline">select only relays from AS number</span>
+                <input type="text" class="input-xlarge" id="ases" name="ases" ng-model="query.ases"
+                placeholder="AS3320">
+                <span class="help-inline">select only relays from AS number</span>
               </div>              
-            <label class="control-label" for="cc">Country Code</label>
+              <label class="control-label" for="cc">Country</label>
               <div class="controls">
-                <input type="text" class="input-xlarge" id="country" name="country"
-                       placeholder="de">
-                  <span class="help-inline">select only relays from country with code</span>
+                 <select id="country" name="country" ng-model='query.country' 
+                   ui-select2 multiple data-placeholder="Germany">
+                   <option ng-repeat="country in cc_data" value="{{country.id}}" >{{country.text}}</option>
+                </select>
+                <span class="help-inline">select only relays from these countries</span>
               </div>              
             </div>
             <label class="control-label" for="exits">Exits</label>
             <div class="controls">
               <label class="radio">
-                <input type="radio" class="exits" name="exits" id="all_relays" value="all_relays" checked>
-                  All relays
-                </label>
-                <label class="radio">
-                  <input type="radio" class="exits" name="exits" id="fast_exits_only" value="fast_exits_only">
-                    Fast exit relays (95+ Mbit/s, 5000+ KB/s,
-                    80/443/554/1755, 2 relays per /24)
-                  </label>
-                <label class="radio">
-                  <input type="radio" class="exits" name="exits" id="almost_fast_exits_only" value="almost_fast_exits_only">
-                    Almost fast exit relays (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)
-                  </label>
-                <label class="radio">
-                  <input type="radio" class="exits" name="exits" id="fast_exits_only_any_network" value="fast_exits_only_any_network">
-                    Fast exits relays any network (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755)
-                  </label>
-                </div>
+                <input type="radio" class="exits" name="exits" id="all_relays" value="all_relays" 
+                ng-model='query.exit_filter' checked>
+                All relays
+              </label>
+              <label class="radio">
+                <input type="radio" class="exits" name="exits" id="fast_exits_only" value="fast_exits_only"
+                ng-model='query.exit_filter'>
+                Fast exit relays (95+ Mbit/s, 5000+ KB/s,
+                80/443/554/1755, 2 relays per /24)
+              </label>
+              <label class="radio">
+                <input type="radio" class="exits" name="exits" id="almost_fast_exits_only" 
+                value="almost_fast_exits_only" ng-model="almost_fast_exits_only">
+                Almost fast exit relays (80+ Mbit/s, 2000+ KB/s, 80/443, not in set of fast exits)
+              </label>
+              <label class="radio">
+                <input type="radio" class="exits" name="exits" id="fast_exits_only_any_network" 
+                ng-model="query.exit_filter" value="fast_exits_only_any_network">
+                Fast exits relays any network (95+ Mbit/s, 5000+ KB/s, 80/443/554/1755)
+              </label>
+            </div>
             <div class="control-group">
               <h3> Group </h3>
               <label class="control-label" for="country">Country</label>
-            <div class="controls">
-              <label class="checkbox">
-                <input type="checkbox" id="by_country" value="True" name="by_country">
-                 group relays by country </label>
-            </div>
-              <label class="control-label" for="as">AS</label>
-            <div class="controls">
-                <input type="checkbox" id="by_as" value="True" name="by_as">
-                 group relays by AS </label>
-            </div>
-            </div>
-
-            <div class="control-group">
-              <h3> Display </h3>
-            <label class="control-label" for="top">Number of results</label>
               <div class="controls">
-                <input type="text" class="input-xlarge" id="top" name="top"
-                       placeholder="-1" value="-1">
-                  <span class="help-inline">display only the top results (-1 for all)</span>
+                <label class="checkbox">
+                  <input type="checkbox" id="by_country" value="True" name="by_country" ng-model="query.by_country">
+                  group relays by country </label>
               </div>
+              <label class="control-label" for="as">AS</label>
+              <div class="controls">
+                <input type="checkbox" id="by_as" value="True" name="by_as" ng-model="query.by_as">
+                group relays by AS </label>
             </div>
-            <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Submit</button>
-            <button class="btn" type=reset>Reset</button>
           </div>
-          </fieldset>
-        </form>
-      </div>
+          <div class="control-group">
+            <h3> Display </h3>
+            <label class="control-label" for="top">Number of results</label>
+            <div class="controls">
+              <input type="text" class="input-xlarge" id="top" name="top"
+              placeholder="-1" value="-1" ng-model="query.top">
+              <span class="help-inline">display only the top results (-1 for all)</span>
+            </div>
+          </div>
+          <div class="form-actions">
+            <button  class="btn btn-primary" ng-click="request(query)">Submit</button>
+            <button class="btn" ng-click="reset()">Reset</button>
+            <div ng-show="state == loading" class="loading"><img src="/static/img/loader.gif" /></div>
+          </div>
+        </fieldset>
+      </form>
+    </div>
 
       <div class="loading"><img src="{{ url_for('static', filename='img/loader.gif') }}" /></div>
       <hr>
