@@ -151,50 +151,80 @@
       </form>
     </div>
 
-      <div class="loading"><img src="{{ url_for('static', filename='img/loader.gif') }}" /></div>
-      <hr>
-      <div id="result" ></div>
+    <div class="hero-unit" ng-show="state == 'result_empty'">
+        <p>No results found</p>
+    </div>
+    <div class="hero-unit" ng-show="state == 'loaded' || state == 'sorting'">
       <table class="table table-striped">
-      <thead>
-      <tr>
-      <th>#</th>
-      <th><span rel="tooltip" title="Relative bandwidth weight assigned to this relay by the directory authorities">Consensus Weights</span></th>
-      <th><span rel="tooltip" title="Relative advertised bandwidth of this relay compared to the total advertised bandwidth in the network">Advertised Bandwidth</span></th>
-      <th><span rel="tooltip" title=" Probability of this relay to be selected for the guard position">Guard Probability</span></th>
-      <th><span rel="tooltip" title="Probability of this relay to be selected for the middle position">Middle Probability</span></th>
-      <th><span rel="tooltip" title="Probability of this relay to be selected for the exit position">Exit Probability</span></th>
-      <th>Nickname</th>
-      <th>Fingerprint</th>
-      <th>Exit</th>
-      <th>Guard</th>
-      <th>Country</th>
-      <th>Autonomous System</th>
-      </tr>
-      </thead>                                         
-      <tbody>
-      <tr ng-repeat="relay in relayResults.results">
-        <td> [[ relay.index ]] </td>
-        <td> [[ relay.cw ]] </td>
-        <td> [[ relay.adv_bw]] </td>
-        <td>[[ relay.p_guard ]]</td>
-        <td>[[ relay.p_middle ]]</td>
-        <td>[[ relay.p_exit ]]</td>
-        <td>[[ relay.nick ]]</td>
-        <!-- it's not a fingerprint -->
-        {% if relay.fp|length != 40 %}
-        <td>[[ relay.fp ]]</td>
-        {% else %}
-        <td><a href="https://atlas.torproject.org/#details/[[ relay.fp ]]">[[ relay.fp[:8] ]]</a></td>
-        {% endif %}
-        <td>[[ relay.exit ]]</td>
-        <td>[[ relay.guard ]]</td>
-        <td>[[ relay.cc ]]</td>
-        <td>[[ relay.as_info ]]</td>
-      <tr>
-      </tbody>
-      </table>
-
-
+        <thead>
+          <tr>
+            <th ng-click="setsort('index',false)">#</th>
+            <th ng-click="setsort('cw', true)">
+              <span rel="tooltip" title="Relative bandwidth weight assigned to this relay by the directory authorities">Consensus Weights</span>
+            </th>
+            <th ng-click="setsort('adv_bw',true)"><span rel="tooltip" title="Relative advertised bandwidth of this relay compared to the total advertised bandwidth in the network">Advertised Bandwidth</span></th>
+            <th ng-click="setsort('p_guard',true)"><span rel="tooltip" title=" Probability of this relay to be selected for the guard position">Guard Probability</span></th>
+            <th ng-click="setsort('p_middle',true)"><span rel="tooltip" title="Probability of this relay to be selected for the middle position">Middle Probability</span></th>
+            <th ng-click="setsort('p_exit',true)"><span rel="tooltip" title="Probability of this relay to be selected for the exit position">Exit Probability</span></th>
+            <th ng-click="setsort('nick',false)">Nickname</th>
+            <th ng-click="setsort('fp',false)">Fingerprint</th>
+            <th ng-click="setsort('exit',false)">Exit</th>
+            <th ng-click="setsort('guard',false)">Guard</th>
+            <th ng-click="setsort('cc',false)">Country</th>
+            <th ng-click="setsort('as_info',false)">Autonomous System</th>
+          </tr>
+        </thead>
+        <tfoot>
+          <tr ng-show="data.excluded">
+            <td> {{ data.excluded.index }} </td>
+            <td> {{ data.excluded.cw | number:4 }}%</td>
+            <td> {{ data.excluded.adv_bw | number:4}}%</td>
+            <td>{{ data.excluded.p_guard | number:4 }}%</td>
+            <td>{{ data.excluded.p_middle | number:4 }}%</td>
+            <td>{{ data.excluded.p_exit | number:4 }}%</td>
+            <td>{{ data.excluded.nick }}</td>
+            <td> {{data.excluded.fp }} </td>
+            <td>{{ data.excluded.exit }}</td>
+            <td>{{ data.excluded.guard }}</td>
+            <td>{{ data.excluded.cc }}</td>
+            <td>{{ data.excluded.as_info }}</td>
+          </tr>
+          <tr ng-show="data.total">
+            <td> {{ data.total.index }} </td>
+            <td> {{ data.total.cw | number:4 }}%</td>
+            <td> {{ data.total.adv_bw | number:4}}%</td>
+            <td>{{ data.total.p_guard | number:4 }}%</td>
+            <td>{{ data.total.p_middle | number:4 }}%</td>
+            <td>{{ data.total.p_exit | number:4 }}%</td>
+            <td>{{ data.total.nick }}</td>
+            <td> {{data.total.fp }} </td>
+            <td>{{ data.total.exit }}</td>
+            <td>{{ data.total.guard }}</td>
+            <td>{{ data.total.cc }}</td>
+            <td>{{ data.total.as_info }}</td>
+          </tr>
+        </tfoot>
+        <tbody>
+          <tr ng-repeat="relay in data.results | orderBy:table.sort:table.reverse">
+            <td> {{ relay.index }} </td>
+            <td> {{ relay.cw | number:4 }}%</td>
+            <td> {{ relay.adv_bw | number:4}}%</td>
+            <td>{{ relay.p_guard | number:4 }}%</td>
+            <td>{{ relay.p_middle | number:4 }}%</td>
+            <td>{{ relay.p_exit | number:4 }}%</td>
+            <td>{{ relay.nick }}</td>
+            <td>
+              <a href="https://atlas.torproject.org/#details/{{relay.fp}}" >{{relay.fp.substring(0,8)}}</a>
+            </td>
+            <td>{{ relay.exit }}</td>
+            <td>{{ relay.guard }}</td>
+            <td>{{ relay.cc }}</td>
+            <td>{{ relay.as_info }}</td>
+            <tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <footer>
         The Tor Project - 2012<br>
