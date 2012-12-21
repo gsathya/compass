@@ -269,7 +269,7 @@ class RelayStats(object):
       for relay in selection['results']:
         print("".join(field.ljust(column_widths[i])
               for i,field in
-              enumerate(relay.printable_fields())))
+              enumerate(relay.printable_fields(options.links))))
 
       #Print the 'excluded' set if we have it
       if selection['excluded']:
