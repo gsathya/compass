@@ -255,7 +255,7 @@ class RelayStats(object):
 
     def print_selection(self,selection,options):
       """
-      Print the selection returned by sort_and_reduce relays into a
+      Print the selection returned by sort_and_reduce relays into a 
       string for the command line version.
       """
       column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
@@ -264,24 +264,28 @@ class RelayStats(object):
                   "Exit","Guard","CC", "Autonomous System"]
 
       #Print the header
-      print("".join(word.ljust(column_widths[i]) for i,word in enumerate(headings)))
+      header = "".join(word.ljust(column_widths[i]) for i,word in enumerate(headings))
+      print(header[:options.short])
 
       for relay in selection['results']:
-        print("".join(field.ljust(column_widths[i])
+        line = "".join(field.ljust(column_widths[i])
               for i,field in
-              enumerate(relay.printable_fields(options.links))))
+              enumerate(relay.printable_fields(options.links)))
+        print(line[:options.short])
 
       #Print the 'excluded' set if we have it
       if selection['excluded']:
-        print("".join(field.ljust(column_widths[i])
+        line = "".join(field.ljust(column_widths[i])
               for i,field in
-              enumerate(selection['excluded'].printable_fields())))
+              enumerate(selection['excluded'].printable_fields()))
+        print(line[:options.short])
 
       #Print the 'total' set if we have it
       if selection['total']:
-        print("".join(field.ljust(column_widths[i])
+        line = "".join(field.ljust(column_widths[i])
               for i,field in
-              enumerate(selection['total'].printable_fields())))
+              enumerate(selection['total'].printable_fields()))
+        print(line[:options.short])
 
     def sort_and_reduce(self, relay_set, options):
       """
@@ -289,10 +293,10 @@ class RelayStats(object):
       filtered), sort it and return the ones requested
       in the 'top' option.  Add index numbers to them as well.
 
-      Returns a hash with three values:
+      Returns a hash with three values: 
         *results*: A list of Result objects representing the selected
                    relays
-        *excluded*: A Result object representing the stats for the
+        *excluded*: A Result object representing the stats for the 
                     filtered out relays. May be None
         *total*: A Result object representing the stats for all of the
                  relays in this filterset.
@@ -304,7 +308,7 @@ class RelayStats(object):
       # We need a simple sorting key function
       def sort_fn(r):
         return getattr(r,options.sort)
-
+      
       relay_set.sort(key=sort_fn,reverse=options.sort_reverse)
 
       if options.top < 0:
@@ -568,7 +572,7 @@ def create_option_parser():
                               "nick","fp"],
                      default="cw",
                      help="sort by this field")
-    group.add_option("--sort_reverse", action="store_true", default=True,
+    group.add_option("--sort_reverse", action="store_true", default=True, 
                      help="invert the sorting order")
     parser.add_option_group(group)
     group = OptionGroup(parser, "Display options")
