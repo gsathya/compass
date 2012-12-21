@@ -58,6 +58,16 @@ class Result():
     def jsonify(self):
       return self.__dict__
 
+    def printable_fields(self):
+      """
+      Return this Result object as a list with the fields in the order
+      expected for printing.
+      """
+      format_str = "%.4f%%|%.4f%%|%.4f%%|%.4f%%|%.4f%%|%s|%s|%s|%s|%s|%s"
+      formatted = format_str % ( self.cw, self.adv_bw, self.p_guard, self.p_middle, self.p_exit,
+               self.nick, self.fp, self.exit, self.guard, self.cc, self.as_info )
+      return formatted.split("|")
+
 class ResultEncoder(json.JSONEncoder):
   def default(self,obj):
     if isinstance(obj,Result):

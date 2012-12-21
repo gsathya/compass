@@ -253,11 +253,49 @@ class RelayStats(object):
 
     WEIGHTS = ['consensus_weight_fraction', 'advertised_bandwidth_fraction', 'guard_probability', 'middle_probability', 'exit_probability']
 
+    def print_selection(self,selection,options):
+      """
+      Print the selection returned by sort_and_reduce relays into a
+      string for the command line version.
+      """
+      column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
+      headings = ["CW","adv_bw","P_guard","P_middle", "P_exit", "Nickname",
+                  "Link" if options.links else "Fingerprint",
+                  "Exit","Guard","CC", "Autonomous System"]
+
+      #Print the header
+      print("".join(word.ljust(column_widths[i]) for i,word in enumerate(headings)))
+
+      for relay in selection['results']:
+        print("".join(field.ljust(column_widths[i])
+              for i,field in
+              enumerate(relay.printable_fields())))
+
+      #Print the 'excluded' set if we have it
+      if selection['excluded']:
+        print("".join(field.ljust(column_widths[i])
+              for i,field in
+              enumerate(selection['excluded'].printable_fields())))
+
+      #Print the 'total' set if we have it
+      if selection['total']:
+        print("".join(field.ljust(column_widths[i])
+              for i,field in
+              enumerate(selection['total'].printable_fields())))
+
     def sort_and_reduce(self, relay_set, options):
       """
-      Take a set of relays (has already been grouped and 
-      filtered), sort it and return the ones requested 
+      Take a set of relays (has already been grouped and
+      filtered), sort it and return the ones requested
       in the 'top' option.  Add index numbers to them as well.
+
+      Returns a hash with three values:
+        *results*: A list of Result objects representing the selected
+                   relays
+        *excluded*: A Result object representing the stats for the
+                    filtered out relays. May be None
+        *total*: A Result object representing the stats for all of the
+                 relays in this filterset.
       """
       output_relays = list()
       excluded_relays = None
@@ -277,7 +315,7 @@ class RelayStats(object):
         selected_relay.index = i + 1
         output_relays.append(selected_relay)
 
-      # Figure out what the 'remainder' numbers are 
+      # Figure out what the 'remainder' numbers are
       if len(relay_set) > options.top:
         if options.by_country and options.by_as:
             filtered = "countries and ASes"
@@ -309,12 +347,12 @@ class RelayStats(object):
                                   filtered)
         total_relays.fp = "(total in selection)"
 
-        # Only include the last line if 
+        # Only include the last line if
         if total_relays.cw > 99.9:
           total_relays = None
 
       return {
-              'results': output_relays, 
+              'results': output_relays,
               'excluded': excluded_relays,
               'total': total_relays
               }
@@ -520,6 +558,15 @@ def create_option_parser():
     group.add_option("-C", "--by-country", action="store_true", default=False,
                      help="group relays by country")
     parser.add_option_group(group)
+    group = OptionGroup(parser, "Sorting options")
+    group.add_option("--sort", type="choice",
+                     choices=["cw","adv_bw","p_guard","p_exit","p_middle",
+                              "nick","fp"],
+                     default="cw",
+                     help="sort by this field")
+    group.add_option("--sort_reverse", action="store_true", default=True,
+                     help="invert the sorting order")
+    parser.add_option_group(group)
     group = OptionGroup(parser, "Display options")
     group.add_option("-l", "--links", action="store_true",
                      help="display links to the Atlas service instead of fingerprints")
@@ -582,17 +629,29 @@ if '__main__' == __name__:
         exit()
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')):
         parser.error("Did not find details.json.  Re-run with --download.")
-    stats = RelayStats(options)
-    sorted_groups = stats.format_and_sort_groups(stats.relays,
-                    country=options.country,
-                    ases=options.ases,
-                    by_country=options.by_country,
-                    by_as_number=options.by_as,
-                    links=options.links)
 
-    output_string = stats.print_groups(sorted_groups, options.top,
-                       by_country=options.by_country,
-                       by_as_number=options.by_as,
-                       short=70 if options.short else None,
-                       links=options.links)
-    print '\n'.join(output_string)
+    stats = RelayStats(options)
+    results = stats.select_relays(stats.relays,
+                                  by_country=options.by_country,
+                                  by_as_number=options.by_as,
+                                  country=options.country,
+                                  ases=options.ases,
+                                  links=options.links)
+
+    sorted_results = stats.sort_and_reduce(results,options)
+
+    stats.print_selection(sorted_results,options)
+
+    #sorted_groups = stats.format_and_sort_groups(stats.relays,
+                    #country=options.country,
+                    #ases=options.ases,
+                    #by_country=options.by_country,
+                    #by_as_number=options.by_as,
+                    #links=options.links)
+
+    #output_string = stats.print_groups(sorted_groups, options.top,
+                       #by_country=options.by_country,
+                       #by_as_number=options.by_as,
+                       #short=70 if options.short else None,
+                       #links=options.links)
+    #print '\n'.join(output_string)
