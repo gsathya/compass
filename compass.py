@@ -310,46 +310,49 @@ class RelayStats(object):
       if options.top < 0:
         options.top = len(relay_set)
 
+      # Set up to handle the special lines at the bottom
+      excluded_relays = util.Result(zero_probs=True)
+      total_relays = util.Result(zero_probs=True)
+      if options.by_country and options.by_as:
+          filtered = "countries and ASes"
+      elif options.by_country:
+          filtered = "countries"
+      elif options.by_as:
+          filtered = "ASes"
+      else:
+          filtered = "relays"
+
       # Add selected relays to the result set
-      for i,selected_relay in enumerate(relay_set[:options.top]):
-        selected_relay.index = i + 1
-        output_relays.append(selected_relay)
+      for i,relay in enumerate(relay_set):
+        if i < options.top:
+          relay.index = i + 1
+          output_relays.append(relay)
 
-      # Figure out what the 'remainder' numbers are
-      if len(relay_set) > options.top:
-        if options.by_country and options.by_as:
-            filtered = "countries and ASes"
-        elif options.by_country:
-            filtered = "countries"
-        elif options.by_as:
-            filtered = "ASes"
-        else:
-            filtered = "relays"
+        if i >= options.top:
+          excluded_relays.p_guard += relay.p_guard
+          excluded_relays.p_exit += relay.p_exit
+          excluded_relays.p_middle += relay.p_middle
+          excluded_relays.adv_bw += relay.adv_bw
+          excluded_relays.cw += relay.cw
 
-        # Sum up all the rates
-        excluded_relays = util.Result(zero_probs=True)
-        total_relays = util.Result(zero_probs=True)
-        for i,relay in enumerate(relay_set):
-          if i < options.top:
-            excluded_relays.p_guard += relay.p_guard
-            excluded_relays.p_exit += relay.p_exit
-            excluded_relays.p_middle += relay.p_middle
-            excluded_relays.adv_bw += relay.adv_bw
-            excluded_relays.cw += relay.cw
-          total_relays.p_guard += relay.p_guard
-          total_relays.p_exit += relay.p_exit
-          total_relays.p_middle += relay.p_middle
-          total_relays.adv_bw += relay.adv_bw
-          total_relays.cw += relay.cw
+        total_relays.p_guard += relay.p_guard
+        total_relays.p_exit += relay.p_exit
+        total_relays.p_middle += relay.p_middle
+        total_relays.adv_bw += relay.adv_bw
+        total_relays.cw += relay.cw
 
         excluded_relays.fp = "(%d other %s)" % (
                                   len(relay_set) - options.top,
                                   filtered)
         total_relays.fp = "(total in selection)"
 
-        # Only include the last line if
-        if total_relays.cw > 99.9:
-          total_relays = None
+      # Only include the excluded line if
+      if len(relay_set) <= options.top:
+        excluded_relays = None
+
+      # Only include the last line if
+      if total_relays.cw > 99.9:
+        total_relays = None
 
       return {
               'results': output_relays,
@@ -534,7 +537,8 @@ def create_option_parser():
                      help="select only relays suitable for guard position")
     group.add_option("--exit-filter",type="choice", dest="exit_filter",
                      choices=["fast_exits_only","almost_fast_exits_only",
-                              "all_relays","fast_exits_only_any_network"])
+                              "all_relays","fast_exits_only_any_network"],
+                     default='all_relays')
     group.add_option("--fast-exits-only", action="store_true",
                      help="select only fast exits (%d+ Mbit/s, %d+ KB/s, %s, %d- per /24)" %
                           (FAST_EXIT_BANDWIDTH_RATE / (125 * 1024),
@@ -619,7 +623,7 @@ if '__main__' == __name__:
         parser.error("Not a valid fingerprint or nickname: %s" % options.family)
 
     try:
-      fix_exit_filter_options(options)
+      options = fix_exit_filter_options(options)
     except:
         parser.error("Can only filter by one fast-exit option.")
 
@@ -642,16 +646,3 @@ if '__main__' == __name__:
 
     stats.print_selection(sorted_results,options)
 
-    #sorted_groups = stats.format_and_sort_groups(stats.relays,
-                    #country=options.country,
-                    #ases=options.ases,
-                    #by_country=options.by_country,
-                    #by_as_number=options.by_as,
-                    #links=options.links)
-
-    #output_string = stats.print_groups(sorted_groups, options.top,
-                       #by_country=options.by_country,
-                       #by_as_number=options.by_as,
-                       #short=70 if options.short else None,
-                       #links=options.links)
-    #print '\n'.join(output_string)

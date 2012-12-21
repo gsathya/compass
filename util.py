@@ -39,15 +39,15 @@ class Result():
         self.p_guard = 0.0 if zero_probs else None
         self.p_exit = 0.0 if zero_probs else None
         self.p_middle = 0.0 if zero_probs else None
-        self.nick = None
-        self.fp = None
-        self.link = None
-        self.exit = None
-        self.guard = None
-        self.cc = None
-        self.as_no = None
-        self.as_name = None
-        self.as_info = None
+        self.nick = ""
+        self.fp = ""
+        self.link = ""
+        self.exit = ""
+        self.guard = ""
+        self.cc = ""
+        self.as_no = ""
+        self.as_name = ""
+        self.as_info = ""
 
     def __getitem__(self,prop):
       getattr(self,prop)
