@@ -446,6 +446,7 @@ def create_option_parser():
     group.add_option("--exit-filter",type="choice", dest="exit_filter",
                      choices=["fast_exits_only","almost_fast_exits_only",
                               "all_relays","fast_exits_only_any_network"],
+                              metavar="{fast_exits_only|almost_fast_exits_only|all_relays|fast_exits_only_any_network}",
                      default='all_relays')
     group.add_option("--fast-exits-only", action="store_true",
                      help="select only fast exits (%d+ Mbit/s, %d+ KB/s, %s, %d- per /24)" %
@@ -474,6 +475,7 @@ def create_option_parser():
     group.add_option("--sort", type="choice",
                      choices=["cw","adv_bw","p_guard","p_exit","p_middle",
                               "nick","fp"],
+                     metavar="{cw|adv_bw|p_guard|p_exit|p_middle|nick|fp}",
                      default="cw",
                      help="sort by this field")
     group.add_option("--sort_reverse", action="store_true", default=True, 
