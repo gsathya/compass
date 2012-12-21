@@ -365,7 +365,7 @@ class RelayStats(object):
               }
 
 
-    def select_relays(self, grouped_relays, country=None, ases=None, by_country=False, by_as_number=False, links=False):
+    def select_relays(self, grouped_relays, options): 
       """
       Return a Pythonic representation of the relays result set. Return it as a set of Result objects.
       """
@@ -381,7 +381,7 @@ class RelayStats(object):
                 group_weights[weight] += relay.get(weight, 0)
 
             result.nick = relay['nickname']
-            result.link = links
+            result.link = options.links
             result.fp = relay['fingerprint']
 
             if 'Exit' in set(relay['flags']) and not 'BadExit' in set(relay['flags']):
@@ -403,15 +403,15 @@ class RelayStats(object):
 
         # If we want to group by things, we need to handle some fields
         # specially
-        if by_country or by_as_number:
+        if options.by_country or options.by_as:
             result.nick = "*"
             result.fp = "(%d relays)" % relays_in_group
             result.exit = "(%d)" % exits_in_group
             result.guard = "(%d)" % guards_in_group
-            if not by_as_number and not ases:
+            if not options.by_as and not options.ases:
                 result.as_info = "(%s)" % len(ases_in_group)
-            if not by_country and not country:
-                country = "*"
+            if not options.by_country and not options.country:
+                options.country = "*"
 
         #Include our weight values
         for weight in group_weights.iterkeys():
@@ -424,102 +424,6 @@ class RelayStats(object):
         results.append(result)
 
       return results
-
-    def format_and_sort_groups(self, grouped_relays, country=None, ases=None, by_country=False, by_as_number=False, links=False):
-
-        formatted_groups = {}
-        for group in grouped_relays.values():
-            group_weights = dict.fromkeys(RelayStats.WEIGHTS, 0)
-            relays_in_group, exits_in_group, guards_in_group = 0, 0, 0
-            ases_in_group = set()
-            for relay in group:
-                for weight in RelayStats.WEIGHTS:
-                    group_weights[weight] += relay.get(weight, 0)
-                nickname = relay['nickname']
-                fingerprint = relay['fingerprint'] if not links else "https://atlas.torproject.org/#details/%s" % relay['fingerprint']
-                if 'Exit' in set(relay['flags']) and not 'BadExit' in set(relay['flags']):
-                    exit = 'Exit'
-                    exits_in_group += 1
-                else:
-                    exit = '-'
-                if 'Guard' in set(relay['flags']):
-                    guard = 'Guard'
-                    guards_in_group += 1
-                else:
-                    guard = '-'
-                country = relay.get('country', '??')
-                as_number = relay.get('as_number', '??')
-                as_name = relay.get('as_name', '??')
-                as_info = "%s %s" %(as_number, as_name)
-                ases_in_group.add(as_info)
-                relays_in_group += 1
-            if by_country or by_as_number:
-                nickname = "*"
-                fingerprint = "(%d relays)" % relays_in_group
-                exit = "(%d)" % exits_in_group
-                guard = "(%d)" % guards_in_group
-                if not by_as_number and not ases:
-                    as_info = "(%s)" % len(ases_in_group)
-                if not by_country and not country:
-                    country = "*"
-            if links:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-78s %-5s %-5s %-2s %-9s"
-            else:
-                format_string = "%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% %-19s %-40s %-5s %-5s %-2s %-9s"
-            formatted_group = format_string % (
-                              group_weights['consensus_weight_fraction'] * 100.0,
-                              group_weights['advertised_bandwidth_fraction'] * 100.0,
-                              group_weights['guard_probability'] * 100.0,
-                              group_weights['middle_probability'] * 100.0,
-                              group_weights['exit_probability'] * 100.0,
-                              nickname, fingerprint,
-                              exit, guard, country, as_info)
-            formatted_groups[formatted_group] = group_weights
-        sorted_groups = sorted(formatted_groups.iteritems(), key=lambda gs: gs[1]['consensus_weight_fraction'])
-        sorted_groups.reverse()
-        return sorted_groups
-
-    def print_groups(self, sorted_groups, count=10, by_country=False, by_as_number=False, short=False, links=False):
-        output_string = []
-        if links:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Link                                                                           Exit  Guard CC Autonomous System"[:short])
-        else:
-            output_string.append("       CW    adv_bw   P_guard  P_middle    P_exit Nickname            Fingerprint                              Exit  Guard CC Autonomous System"[:short])
-        if count < 0: count = len(sorted_groups)
-        for formatted_group, weight in sorted_groups[:count]:
-            output_string.append(formatted_group[:short])
-        if len(sorted_groups) > count:
-            if by_country and by_as_number:
-                type = "countries and ASes"
-            elif by_country:
-                type = "countries"
-            elif by_as_number:
-                type = "ASes"
-            else:
-                type = "relays"
-            other_weights = dict.fromkeys(RelayStats.WEIGHTS, 0)
-            for _, weights in sorted_groups[count:]:
-                for weight in RelayStats.WEIGHTS:
-                    other_weights[weight] += weights[weight]
-            output_string.append("%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (%d other %s)" % (
-                  other_weights['consensus_weight_fraction'] * 100.0,
-                  other_weights['advertised_bandwidth_fraction'] * 100.0,
-                  other_weights['guard_probability'] * 100.0,
-                  other_weights['middle_probability'] * 100.0,
-                  other_weights['exit_probability'] * 100.0,
-                  len(sorted_groups) - count, type))
-        selection_weights = dict.fromkeys(RelayStats.WEIGHTS, 0)
-        for _, weights in sorted_groups:
-            for weight in RelayStats.WEIGHTS:
-                selection_weights[weight] += weights[weight]
-        if len(sorted_groups) > 1 and selection_weights['consensus_weight_fraction'] < 0.999:
-            output_string.append("%8.4f%% %8.4f%% %8.4f%% %8.4f%% %8.4f%% (total in selection)" % (
-                  selection_weights['consensus_weight_fraction'] * 100.0,
-                  selection_weights['advertised_bandwidth_fraction'] * 100.0,
-                  selection_weights['guard_probability'] * 100.0,
-                  selection_weights['middle_probability'] * 100.0,
-                  selection_weights['exit_probability'] * 100.0))
-        return output_string
 
 def create_option_parser():
     parser = OptionParser()
@@ -640,12 +544,7 @@ if '__main__' == __name__:
         parser.error("Did not find details.json.  Re-run with --download.")
 
     stats = RelayStats(options)
-    results = stats.select_relays(stats.relays,
-                                  by_country=options.by_country,
-                                  by_as_number=options.by_as,
-                                  country=options.country,
-                                  ases=options.ases,
-                                  links=options.links)
+    results = stats.select_relays(stats.relays,options)
 
     sorted_results = stats.sort_and_reduce(results,options)
 
