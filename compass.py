@@ -345,10 +345,10 @@ class RelayStats(object):
         total_relays.adv_bw += relay.adv_bw
         total_relays.cw += relay.cw
 
-        excluded_relays.fp = "(%d other %s)" % (
+        excluded_relays.nick = "(%d other %s)" % (
                                   len(relay_set) - options.top,
                                   filtered)
-        total_relays.fp = "(total in selection)"
+        total_relays.nick = "(total in selection)"
 
       # Only include the excluded line if
       if len(relay_set) <= options.top:
@@ -580,7 +580,8 @@ def create_option_parser():
                      help="display links to the Atlas service instead of fingerprints")
     group.add_option("-t", "--top", type="int", default=10, metavar="NUM",
                      help="display only the top results (default: %default; -1 for all)")
-    group.add_option("-s", "--short", action="store_true",
+
+    group.add_option("-s", "--short", action="store_const",dest='short',const=70,
                      help="cut the length of the line output at 70 chars")
     parser.add_option_group(group)
     return parser
