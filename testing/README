@@ -1,0 +1,13 @@
+
+These are a set of scripts designed to makes sure that any 
+changes I have made don't change the behavior of the original 
+compass.py. test.sh will run a series of command line switches
+at compass.py, and save the output in a series of named test 
+files.
+check.py will take two test names and compare the output
+from those tests to see if they match.
+
+
+Note: Sometimes a test will fail even though the output is correct
+because the sorting works differently in my revised version and
+elements with the same value don't always occur in the same order. 
