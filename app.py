@@ -120,18 +120,12 @@ def json_result():
     options = Opt(dict(request.args.items()))
 
     stats = compass.RelayStats(options)
-    results = stats.select_relays(stats.relays,
-                                  by_country=options.by_country,
-                                  by_as_number=options.by_as,
-                                  links=options.links)
-
+    results = stats.select_relays(stats.relays, options)
 
     relays = stats.sort_and_reduce(results,
                                    options)
 
-    return Response(json.dumps(relays, cls=ResultEncoder), mimetype='application/json') 
-
-
+    return Response(json.dumps(relays, cls=ResultEncoder), mimetype='application/json')
 
 @app.route('/result', methods=['GET'])
 def result():
