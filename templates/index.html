@@ -152,14 +152,17 @@
             </div>
           </div>
           <div class="form-actions">
-            <button  class="btn btn-primary" ng-click="request(query)">Submit</button>
+            <button  class="btn btn-primary" ng-click="request()">Submit</button>
             <button class="btn" ng-click="reset()">Reset</button>
-            <div ng-show="state == loading" class="loading"><img src="/static/img/loader.gif" /></div>
+            <span>{{state}}</span>
           </div>
         </fieldset>
       </form>
     </div>
 
+    <div class="hero-unit" ng-show="state == 'loading'" >
+      <div class='loading'><img src="/static/img/loader.gif" /></div>
+    </div>
     <div class="hero-unit" ng-show="state == 'result_empty'">
         <p>No results found</p>
     </div>
