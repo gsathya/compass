@@ -1,4 +1,4 @@
-var compassModule = angular.module("Compass", ['ui','oblique.directives'])
+var compassModule = angular.module("Compass", ['ui','oblique.directives','oblique.filters'])
 
 compassModule.value('ui.config', {
    select2: {

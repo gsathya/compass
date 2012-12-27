@@ -41,7 +41,7 @@ class Result():
         self.p_middle = 0.0 if zero_probs else None
         self.nick = ""
         self.fp = ""
-        self.link = ""
+        self.link = True
         self.exit = ""
         self.guard = ""
         self.cc = ""

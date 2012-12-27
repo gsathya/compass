@@ -328,6 +328,10 @@ class RelayStats(object):
 
       # Add selected relays to the result set
       for i,relay in enumerate(relay_set):
+        # We have no links if we're grouping
+        if options.by_country or options.by_as:
+          relay.link = False
+
         if i < options.top:
           relay.index = i + 1
           output_relays.append(relay)
@@ -381,8 +385,8 @@ class RelayStats(object):
                 group_weights[weight] += relay.get(weight, 0)
 
             result.nick = relay['nickname']
-            result.link = options.links
             result.fp = relay['fingerprint']
+            result.link = options.links
 
             if 'Exit' in set(relay['flags']) and not 'BadExit' in set(relay['flags']):
                 result.exit = 'Exit'
