@@ -1,7 +1,10 @@
 import json
 
 def Container(val):
-  return json.loads(val)
+  try:
+    return json.loads(val)
+  except ValueError:
+    return []
 
 def NullFn(val):
   return val

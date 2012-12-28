@@ -7,20 +7,23 @@ compassModule.value('ui.config', {
    }
 });
 
-compassModule.controller('CompassCtrl',function CompassCtrl($scope,$http) {
+compassModule.controller('CompassCtrl',function CompassCtrl($scope,$http,$location) {
 
   $scope.state = "hidden"
   $scope.query = {
     exit_filter:"all_relays",
     links:true,
     sort:'cw',
-    sort_reverse:true,
     country: null
   }
-  $scope.table = {
-    sort: 'cw',
-    reverse: true
-  }
+
+  /** Watch the location bar to allow us to load saved searches **/
+  $scope.$watch($location.search(), function(newv, oldv, scope) {
+    if ($location.search().top) {
+      $scope.query=$location.search()
+      $scope.request()
+    }
+  })
 
   /** Make a sorting request
    *
@@ -29,6 +32,9 @@ compassModule.controller('CompassCtrl',function CompassCtrl($scope,$http) {
   $scope.ajax_sort = function(sortBy, invert, success_cb) {
     $scope.query.sort = sortBy
     $scope.query.sort_reverse = invert
+
+    //Update the location bar to track sorting
+    $location.search($scope.query)
 
     $http.get('result.json',{"params":$scope.query})
       .success(function(data) {
@@ -54,6 +60,9 @@ compassModule.controller('CompassCtrl',function CompassCtrl($scope,$http) {
    */
   $scope.request = function(success_cb) {
     $scope.state = 'loading'
+
+    //Set the location bar for this search
+    $location.search($scope.query)
 
     $http.get('result.json',{"params":$scope.query})
       .success(function(data) {
