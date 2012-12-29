@@ -14,6 +14,7 @@ compassModule.controller('CompassCtrl',function CompassCtrl($scope,$http,$locati
     exit_filter:"all_relays",
     links:true,
     sort:'cw',
+    sort_reverse: true,
     country: null
   }
 
