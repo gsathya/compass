@@ -113,7 +113,8 @@ def parse(output_string, grouping=False, sort_key=None):
 
 @app.route('/')
 def index():
-    return app.open_resource("templates/index.html").read()
+
+    return app.open_resource("templates/index.html").read().replace('<!--%script_root%-->',request.script_root)
 
 @app.route('/result.json', methods=['GET'])
 def json_result():

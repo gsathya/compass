@@ -2,6 +2,11 @@
 <html lang="en" ng-app="Compass">
   <head>
     <meta charset="utf-8">
+    <!-- This sets the relative base_url for the app, which
+         is necessary if its not running from the root.
+         Flask replaces this %script_root% piece with the
+         right path-->
+    <base href="<!--%script_root%-->/">
     <title>Compass</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Tor relay stats">
@@ -160,7 +165,7 @@
     </div>
 
     <div class="hero-unit" ng-show="state == 'loading'" >
-      <div class='loading'><img src="/static/img/loader.gif" /></div>
+      <div class='loading'><img src="static/img/loader.gif" /></div>
     </div>
     <div class="hero-unit" ng-show="state == 'result_empty'">
         <p>No results found</p>
