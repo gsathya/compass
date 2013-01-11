@@ -1,10 +1,16 @@
 import json
+import shlex
 
-def Container(val):
+def JSON(val):
   try:
     return json.loads(val)
   except ValueError:
     return []
+
+def List(val):
+  lex = shlex.shlex(val)
+  lex.whitespace += "[],"
+  return list(lex)
 
 def NullFn(val):
   return val

@@ -1,7 +1,7 @@
 import os
 import re
 import compass
-from util import Result,Boolean,NullFn,Int,Container,ResultEncoder
+from util import Result,Boolean,NullFn,Int,List,ResultEncoder,JSON
 import json
 from flask import Flask, request, jsonify, render_template,Response
 
@@ -19,8 +19,8 @@ class Opt(object):
       'sort_reverse':Boolean,
       'top':Int,
       'family':NullFn,
-      'ases':NullFn,
-      'country':Container,
+      'ases':List,
+      'country':JSON,
       'exit_filter':NullFn
     }
 
