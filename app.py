@@ -120,7 +120,11 @@ def index():
 def json_result():
     options = Opt(dict(request.args.items()))
 
-    stats = compass.RelayStats(options)
+    if "TESTING_DATAFILE" in app.config and "TESTING" in app.config:
+      stats = compass.RelayStats(options,app.config['TESTING_DATAFILE'])
+    else:
+      stats = compass.RelayStats(options)
+
     results = stats.select_relays(stats.relays, options)
 
     relays = stats.sort_and_reduce(results,
