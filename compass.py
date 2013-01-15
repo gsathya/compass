@@ -184,17 +184,18 @@ class InverseFilter(BaseFilter):
         return inverse_relays
 
 class RelayStats(object):
-    def __init__(self, options):
+    def __init__(self, options, custom_datafile="details.json"):
         self._data = None
         self._filters = self._create_filters(options)
         self._get_group = self._get_group_function(options)
         self._relays = None
+        self._datafile_name = custom_datafile
 
     @property
     def data(self):
-        if not self._data:
-            self._data = json.load(file(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')))
-        return self._data
+      if not self._data:
+        self._data = json.load(file(os.path.join(os.path.dirname(os.path.abspath(__file__)), self._datafile_name)))
+      return self._data
 
     @property
     def relays(self):
@@ -493,6 +494,10 @@ def create_option_parser():
 
     group.add_option("-s", "--short", action="store_const",dest='short',const=70,
                      help="cut the length of the line output at 70 chars")
+    group.add_option("-j", "--json", action="store_true",
+                     help="output in JSON rather than human-readable format")
+    group.add_option("--datafile", default="details.json",
+                     help="use a custom datafile (Default: 'details.json')")
     parser.add_option_group(group)
     return parser
 
@@ -549,10 +554,13 @@ if '__main__' == __name__:
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')):
         parser.error("Did not find details.json.  Re-run with --download.")
 
-    stats = RelayStats(options)
+    stats = RelayStats(options,options.datafile)
     results = stats.select_relays(stats.relays,options)
 
     sorted_results = stats.sort_and_reduce(results,options)
 
-    stats.print_selection(sorted_results,options)
+    if options.json:
+      print(json.dumps(sorted_results,cls=util.ResultEncoder))
+    else:
+      stats.print_selection(sorted_results,options)
 

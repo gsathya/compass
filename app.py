@@ -8,25 +8,30 @@ from flask import Flask, request, jsonify, render_template,Response
 app = Flask(__name__)
 
 class Opt(object):
-    request_types = {
-      'by_as':Boolean,
-      'by_country':Boolean,
-      'inactive':Boolean,
-      'exits_only':Boolean,
-      'guards_only': Boolean,
-      'links':Boolean,
-      'sort':NullFn,
-      'sort_reverse':Boolean,
-      'top':Int,
-      'family':NullFn,
-      'ases':List,
-      'country':JSON,
-      'exit_filter':NullFn
+    option_details = {
+      'by_as':(Boolean, False),
+      'by_country':(Boolean, False),
+      'inactive':( Boolean, False ),
+      'exits_only':( Boolean, False ),
+      'guards_only': ( Boolean, False),
+      'links':( Boolean, True ),
+      'sort':( NullFn, "cw" ),
+      'sort_reverse':( Boolean, True ),
+      'top':( Int , 10),
+      'family':( NullFn, "" ),
+      'ases':( List, [] ),
+      'country':( JSON, [] ),
+      'exit_filter':( NullFn, "all_relays" )
     }
+
 
     @staticmethod
     def convert(key,val):
-      return Opt.request_types[key](val)
+      return Opt.option_details[key][0](val)
+
+    @staticmethod
+    def default(key):
+      return Opt.option_details[key][1]
 
     def __str__(self):
       return repr(self)
@@ -35,12 +40,11 @@ class Opt(object):
       return str(self.__dict__)
 
     def __init__(self,request):
-
-      for key in Opt.request_types:
+      for key in Opt.option_details:
         if key in request:
           setattr(self,key,Opt.convert(key,request[key]))
         else:
-          setattr(self,key,Opt.convert(key,None))
+          setattr(self,key,Opt.default(key))
 
 def parse(output_string, grouping=False, sort_key=None):
     results = []
@@ -120,7 +124,11 @@ def index():
 def json_result():
     options = Opt(dict(request.args.items()))
 
-    stats = compass.RelayStats(options)
+    if "TESTING_DATAFILE" in app.config and "TESTING" in app.config:
+      stats = compass.RelayStats(options,app.config['TESTING_DATAFILE'])
+    else:
+      stats = compass.RelayStats(options)
+
     results = stats.select_relays(stats.relays, options)
 
     relays = stats.sort_and_reduce(results,
