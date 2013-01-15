@@ -4,13 +4,16 @@ import shlex
 def JSON(val):
   try:
     return json.loads(val)
-  except ValueError:
+  except (ValueError,TypeError):
     return []
 
 def List(val):
-  lex = shlex.shlex(val)
-  lex.whitespace += "[],"
-  return list(lex)
+  if val:
+    lex = shlex.shlex(val)
+    lex.whitespace += "[],"
+    return list(lex)
+  else:
+    return []
 
 def NullFn(val):
   return val
