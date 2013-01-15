@@ -1,13 +1,34 @@
+Testing
+=======
 
-These are a set of scripts designed to makes sure that any 
-changes I have made don't change the behavior of the original 
-compass.py. test.sh will run a series of command line switches
-at compass.py, and save the output in a series of named test 
+Unit Tests
+----------
+I've started writing unit tests when bugs are encountered.
+The tests are written using UnitTest, and can be run as follows:
+
+```python
+cd compass
+nosetests
+```
+
+Most of the tests are checking against JSON output. Where
+reasonably small I have inlined the expected result in the
+testcases, but in certain cases I've included them as files in
+the `expectations` directory.
+
+Regression Tests
+----------------
+
+These are a set of scripts designed to make sure that changes to
+the command line version of `compass.py` don't result in
+different output than before. They're not pretty, but they work.
+
+`test.sh` will run a series of command line switches
+at `compass.py`, and save the output in a series of named test 
 files.
-check.py will take two test names and compare the output
+`check.py` will take two test names and compare the output
 from those tests to see if they match.
 
-
-Note: Sometimes a test will fail even though the output is correct
+*Note:* Sometimes a test will fail even though the output is correct
 because the sorting works differently in my revised version and
 elements with the same value don't always occur in the same order. 

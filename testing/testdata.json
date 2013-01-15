@@ -449,4 +449,36 @@
 ],
 "contact":"r dot p dot j at wxs dot nl",
 "platform":"Tor 0.2.2.39 (git-bec76476efb71549) on Windows 7 Service Pack 1 [workstation]"
-}]}
+},
+{"nickname":"winner",
+"fingerprint":"9DD3F90D641D835C4FCA7153148B156E6FD49CEE",
+"or_addresses":["46.4.106.18:443"],
+"dir_address":"46.4.106.18:9030",
+"running":true,
+"flags":["Fast","Guard","HSDir","Named","Running","Stable","V2Dir","Valid"],
+"country":"de",
+"latitude":51.000000,
+"longitude":9.000000,
+"country_name":"Germany",
+"as_number":"AS3",
+"as_name":"Hetzner Online AG RZ",
+"consensus_weight":8750,
+"host_name":"static.18.106.4.46.clients.your-server.de",
+"advertised_bandwidth_fraction":0.001122543,
+"consensus_weight_fraction":0.000915991,
+"guard_probability":0.002748011,
+"middle_probability":0.000000000,
+"exit_probability":0.000000000,
+"exit_policy_summary":{"reject":["1-65535"]},
+"last_restarted":"2012-10-26 22:15:33",
+"bandwidth_rate":4096000,
+"bandwidth_burst":9216000,
+"observed_bandwidth":5059825,
+"advertised_bandwidth":4096000,
+"exit_policy":[
+  "reject *:*"
+],
+"contact":"TlpCRm91bmRhdGlvbit0b3JAZ21haWwuY29t",
+"platform":"Tor 0.2.3.24-rc on Linux"
+}
+]}

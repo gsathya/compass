@@ -35,6 +35,15 @@ class TestCase(unittest.TestCase):
       """)
     self.assertItemsEqual(received,expected)
 
+  def test_select_AS1234567890(self):
+    received = json.loads(self.app.get("/result.json?ases=AS1234567890").data)
+    expected = json.loads(
+"""
+{"total": {"fp": "", "index": null, "as_no": "", "nick": "", "cc": "", "p_exit": 0.0, "adv_bw": 0.0, "guard": "", "link": true, "p_guard": 0.0, "p_middle": 0.0, "exit": "", "as_info": "", "cw": 0.0, "as_name": ""}, "results": [], "excluded": null}
+"""
+    )
+    self.assertItemsEqual(received,expected)
+
   def test_select_AS_with_label(self):
     received = json.loads(self.app.get("/result.json?ases=AS7922").data)
     expected = json.loads(
