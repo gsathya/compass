@@ -493,6 +493,8 @@ def create_option_parser():
 
     group.add_option("-s", "--short", action="store_const",dest='short',const=70,
                      help="cut the length of the line output at 70 chars")
+    group.add_option("-j", "--json", action="store_true",
+                     help="output in JSON rather than human-readable format")
     parser.add_option_group(group)
     return parser
 
@@ -554,5 +556,8 @@ if '__main__' == __name__:
 
     sorted_results = stats.sort_and_reduce(results,options)
 
-    stats.print_selection(sorted_results,options)
+    if options.json:
+      print(json.dumps(sorted_results,cls=util.ResultEncoder))
+    else:
+      stats.print_selection(sorted_results,options)
 
