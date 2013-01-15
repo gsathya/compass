@@ -9,7 +9,7 @@ def JSON(val):
 
 def List(val):
   if val:
-    lex = shlex.shlex(val)
+    lex = shlex.shlex(val.encode('ascii','ignore'))
     lex.whitespace += "[],"
     return list(lex)
   else:
