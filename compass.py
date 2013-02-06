@@ -186,10 +186,10 @@ class InverseFilter(BaseFilter):
 class RelayStats(object):
     def __init__(self, options, custom_datafile="details.json"):
         self._data = None
+        self._datafile_name = custom_datafile
         self._filters = self._create_filters(options)
         self._get_group = self._get_group_function(options)
         self._relays = None
-        self._datafile_name = custom_datafile
 
     @property
     def data(self):
