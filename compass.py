@@ -64,9 +64,7 @@ class RelayStats(object):
         elif options.exit_filter == 'fast_exits_only':
             filters.append(SameNetworkFilter(FastExitFilter()))
         elif options.exit_filter == 'almost_fast_exits_only':
-            filters.append(FastExitFilter(ALMOST_FAST_EXIT_BANDWIDTH_RATE,
-                                          ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH,
-                                          ALMOST_FAST_EXIT_PORTS))
+            filters.append(FastExitFilter(almost_fast=True))
             filters.append(InverseFilter(SameNetworkFilter(FastExitFilter())))
         elif options.exit_filter == 'fast_exits_only_any_network':
             filters.append(FastExitFilter())

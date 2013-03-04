@@ -73,12 +73,15 @@ class FastExitFilter(BaseFilter):
             self.fp = relay.get('fingerprint')
             self.relay = relay
 
-    def __init__(self, bandwidth_rate=FAST_EXIT_BANDWIDTH_RATE,
-                 advertised_bandwidth=FAST_EXIT_ADVERTISED_BANDWIDTH,
-                 ports=FAST_EXIT_PORTS):
-        self.bandwidth_rate = bandwidth_rate
-        self.advertised_bandwidth = advertised_bandwidth
-        self.ports = ports
+    def __init__(self, almost_fast=False):
+        if almost_fast:
+            self.bandwidth_rate = ALMOST_FAST_EXIT_BANDWIDTH_RATE
+            self.advertised_bandwidth = ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH
+            self.ports = ALMOST_FAST_EXIT_PORTS
+        else:
+            self.bandwidth_rate = FAST_EXIT_BANDWIDTH_RATE
+            self.advertised_bandwidth = FAST_EXIT_ADVERTISED_BANDWIDTH
+            self.ports = FAST_EXIT_PORTS
 
     def load(self, all_relays):
         # First, filter relays based on bandwidth and port requirements.
