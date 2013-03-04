@@ -6,182 +6,18 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
-FAST_EXIT_BANDWIDTH_RATE = 95 * 125 * 1024     # 95 Mbit/s
-FAST_EXIT_ADVERTISED_BANDWIDTH = 5000 * 1024   # 5000 kB/s
-FAST_EXIT_PORTS = [80, 443, 554, 1755]
-FAST_EXIT_MAX_PER_NETWORK = 2
-
-ALMOST_FAST_EXIT_BANDWIDTH_RATE = 80 * 125 * 1024    # 80 Mbit/s
-ALMOST_FAST_EXIT_ADVERTISED_BANDWIDTH = 2000 * 1024  # 2000 kB/s
-ALMOST_FAST_EXIT_PORTS = [80, 443]
 
 import json
 import operator
 import sys
 import util
 import os
-from optparse import OptionParser, OptionGroup
 import urllib
 import re
 import itertools
 
-class BaseFilter(object):
-    def accept(self, relay):
-        raise NotImplementedError("This isn't implemented by the subclass")
-
-    def load(self, relays):
-        return filter(self.accept, relays)
-
-class RunningFilter(BaseFilter):
-    def accept(self, relay):
-        return relay['running']
-
-class FamilyFilter(BaseFilter):
-    def __init__(self, family, all_relays):
-        self._family_fingerprint = None
-        self._family_nickname = None
-        self._family_relays = []
-        found_relay = None
-        for relay in all_relays:
-            if len(family) == 40 and relay['fingerprint'] == family:
-                found_relay = relay
-                break
-            if len(family) < 20 and 'Named' in relay['flags'] and relay['nickname'] == family:
-                found_relay = relay
-                break
-        if found_relay:
-            self._family_fingerprint = '$%s' % found_relay['fingerprint']
-            if 'Named' in found_relay['flags']:
-                self._family_nickname = found_relay['nickname']
-            self._family_relays = [self._family_fingerprint] + found_relay.get('family', [])
-
-    def accept(self, relay):
-        fingerprint = '$%s' % relay['fingerprint']
-        mentions = [fingerprint] + relay.get('family', [])
-        # Only show families as accepted by consensus (mutually listed relays)
-        listed = fingerprint in self._family_relays
-        listed = listed or 'Named' in relay['flags'] and relay['nickname'] in self._family_relays
-        mentioned = self._family_fingerprint in mentions
-        mentioned = mentioned or self._family_nickname in mentions
-        if listed and mentioned:
-            return True
-        return False
-
-class CountryFilter(BaseFilter):
-    def __init__(self, countries=[]):
-        self._countries = [x.lower() for x in countries]
-
-    def accept(self, relay):
-        return relay.get('country', None) in self._countries
-
-class ASFilter(BaseFilter):
-    def __init__(self, as_sets=[]):
-        self._as_sets = [x if not x.isdigit() else "AS" + x for x in as_sets]
-
-    def accept(self, relay):
-        return relay.get('as_number', None) in self._as_sets
-
-class ExitFilter(BaseFilter):
-    def accept(self, relay):
-        return relay.get('exit_probability', -1) > 0.0
-
-class GuardFilter(BaseFilter):
-    def accept(self, relay):
-        return relay.get('guard_probability', -1) > 0.0
-
-class FastExitFilter(BaseFilter):
-    class Relay(object):
-        def __init__(self, relay):
-            self.exit = relay.get('exit_probability')
-            self.fp = relay.get('fingerprint')
-            self.relay = relay
-
-    def __init__(self, bandwidth_rate=FAST_EXIT_BANDWIDTH_RATE,
-                 advertised_bandwidth=FAST_EXIT_ADVERTISED_BANDWIDTH,
-                 ports=FAST_EXIT_PORTS):
-        self.bandwidth_rate = bandwidth_rate
-        self.advertised_bandwidth = advertised_bandwidth
-        self.ports = ports
-
-    def load(self, all_relays):
-        # First, filter relays based on bandwidth and port requirements.
-        matching_relays = []
-        for relay in all_relays:
-            if relay.get('bandwidth_rate', -1) < self.bandwidth_rate:
-                continue
-            if relay.get('advertised_bandwidth', -1) < self.advertised_bandwidth:
-                continue
-            relevant_ports = set(self.ports)
-            summary = relay.get('exit_policy_summary', {})
-            if 'accept' in summary:
-                portlist = summary['accept']
-            elif 'reject' in summary:
-                portlist = summary['reject']
-            else:
-                continue
-            ports = []
-            for p in portlist:
-                if '-' in p:
-                    ports.extend(range(int(p.split('-')[0]),
-                                       int(p.split('-')[1]) + 1))
-                else:
-                    ports.append(int(p))
-            policy_ports = set(ports)
-            if 'accept' in summary and not relevant_ports.issubset(policy_ports):
-                continue
-            if 'reject' in summary and not relevant_ports.isdisjoint(policy_ports):
-                continue
-            matching_relays.append(relay)
-        return matching_relays
-
-class SameNetworkFilter(BaseFilter):
-    def __init__(self, orig_filter, max_per_network=FAST_EXIT_MAX_PER_NETWORK):
-        self.orig_filter = orig_filter
-        self.max_per_network = max_per_network
-
-    def load(self, all_relays):
-        network_data = {}
-        for relay in self.orig_filter.load(all_relays):
-            or_addresses = relay.get("or_addresses")
-            no_of_addresses = 0
-            for ip in or_addresses:
-                ip, port = ip.rsplit(':', 1)
-                # skip if ipv6
-                if ':' in ip:
-                    continue
-                no_of_addresses += 1
-                if no_of_addresses > 1:
-                    print "[WARNING] - %s has more than one IPv4 OR address - %s" % relay.get("fingerprint"), or_addresses
-                network = ip.rsplit('.', 1)[0]
-                if network_data.has_key(network):
-                    if len(network_data[network]) >= FAST_EXIT_MAX_PER_NETWORK:
-                        # assume current relay to have smallest exit_probability
-                        min_exit = relay.get('exit_probability')
-                        min_id = -1
-                        for id, value in enumerate(network_data[network]):
-                            if value.get('exit_probability') < min_exit:
-                                min_exit = value.get('exit_probability')
-                                min_id = id
-                        if min_id != -1:
-                            del network_data[network][min_id]
-                            network_data[network].append(relay)
-                    else:
-                        network_data[network].append(relay)
-                else:
-                    network_data[network] = [relay]
-        return list(itertools.chain.from_iterable(network_data.values()))
-
-class InverseFilter(BaseFilter):
-    def __init__(self, orig_filter):
-        self.orig_filter = orig_filter
-
-    def load(self, all_relays):
-        matching_relays = self.orig_filter.load(all_relays)
-        inverse_relays = []
-        for relay in all_relays:
-            if relay not in matching_relays:
-                inverse_relays.append(relay)
-        return inverse_relays
+from filters import *
+from optparse import OptionParser, OptionGroup
 
 class RelayStats(object):
     def __init__(self, options, custom_datafile="details.json"):
@@ -256,7 +92,7 @@ class RelayStats(object):
 
     def print_selection(self,selection,options):
       """
-      Print the selection returned by sort_and_reduce relays into a 
+      Print the selection returned by sort_and_reduce relays into a
       string for the command line version.
       """
       column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
@@ -294,10 +130,10 @@ class RelayStats(object):
       filtered), sort it and return the ones requested
       in the 'top' option.  Add index numbers to them as well.
 
-      Returns a hash with three values: 
+      Returns a hash with three values:
         *results*: A list of Result objects representing the selected
                    relays
-        *excluded*: A Result object representing the stats for the 
+        *excluded*: A Result object representing the stats for the
                     filtered out relays. May be None
         *total*: A Result object representing the stats for all of the
                  relays in this filterset.
@@ -309,7 +145,7 @@ class RelayStats(object):
       # We need a simple sorting key function
       def sort_fn(r):
         return getattr(r,options.sort)
-      
+
       relay_set.sort(key=sort_fn,reverse=options.sort_reverse)
 
       if options.top < 0:
@@ -370,7 +206,7 @@ class RelayStats(object):
               }
 
 
-    def select_relays(self, grouped_relays, options): 
+    def select_relays(self, grouped_relays, options):
       """
       Return a Pythonic representation of the relays result set. Return it as a set of Result objects.
       """
@@ -483,7 +319,7 @@ def create_option_parser():
                      metavar="{cw|adv_bw|p_guard|p_exit|p_middle|nick|fp}",
                      default="cw",
                      help="sort by this field")
-    group.add_option("--sort_reverse", action="store_true", default=True, 
+    group.add_option("--sort_reverse", action="store_true", default=True,
                      help="invert the sorting order")
     parser.add_option_group(group)
     group = OptionGroup(parser, "Display options")
@@ -563,4 +399,3 @@ if '__main__' == __name__:
       print(json.dumps(sorted_results,cls=util.ResultEncoder))
     else:
       stats.print_selection(sorted_results,options)
-
