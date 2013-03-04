@@ -6,7 +6,6 @@
 # To Public License, Version 2, as published by Sam Hocevar. See
 # http://sam.zoy.org/wtfpl/COPYING for more details.
 
-
 import json
 import operator
 import sys
@@ -136,20 +135,21 @@ class RelayStats(object):
         *total*: A Result object representing the stats for all of the
                  relays in this filterset.
       """
-      output_relays = list()
+      output_relays = []
       excluded_relays = None
       total_relays = None
 
       # We need a simple sorting key function
       def sort_fn(r):
-        return getattr(r,options.sort)
+        return getattr(r, options.sort)
 
-      relay_set.sort(key=sort_fn,reverse=options.sort_reverse)
+      relay_set.sort(key=sort_fn, reverse=options.sort_reverse)
 
       if options.top < 0:
         options.top = len(relay_set)
 
       # Set up to handle the special lines at the bottom
+      # What is zero_probs? Maybe remove it?
       excluded_relays = util.Result(zero_probs=True)
       total_relays = util.Result(zero_probs=True)
       if options.by_country and options.by_as:
@@ -162,7 +162,7 @@ class RelayStats(object):
           filtered = "relays"
 
       # Add selected relays to the result set
-      for i,relay in enumerate(relay_set):
+      for i, relay in enumerate(relay_set):
         # We have no links if we're grouping
         if options.by_country or options.by_as:
           relay.link = False
@@ -197,10 +197,10 @@ class RelayStats(object):
         total_relays = None
 
       return {
-              'results': output_relays,
-              'excluded': excluded_relays,
-              'total': total_relays
-              }
+          'results': output_relays,
+          'excluded': excluded_relays,
+          'total': total_relays
+          }
 
 
     def select_relays(self, grouped_relays, options):
