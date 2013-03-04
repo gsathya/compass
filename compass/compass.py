@@ -249,27 +249,30 @@ def print_selection(selection, options):
                 "Exit","Guard","CC", "Autonomous System"]
 
     #Print the header
-    header = "".join(word.ljust(column_widths[i]) for i,word in enumerate(headings))
+    header = "".join(word.ljust(column_widths[i]) for i, word in enumerate(headings))
     print(header[:options.short])
 
     for relay in selection['results']:
-        line = "".join(field.ljust(column_widths[i])
-              for i,field in
-              enumerate(relay.printable_fields(options.links)))
+        line = "".join(
+            field.ljust(column_widths[i]) for i, field in
+            enumerate(relay.printable_fields(options.links))
+            )
         print(line[:options.short])
 
     #Print the 'excluded' set if we have it
     if selection['excluded']:
-        line = "".join(field.ljust(column_widths[i])
-              for i,field in
-              enumerate(selection['excluded'].printable_fields()))
+        line = "".join(
+            field.ljust(column_widths[i]) for i,field in
+            enumerate(selection['excluded'].printable_fields())
+            )
         print(line[:options.short])
 
     #Print the 'total' set if we have it
     if selection['total']:
-        line = "".join(field.ljust(column_widths[i])
-              for i,field in
-              enumerate(selection['total'].printable_fields()))
+        line = "".join(
+            field.ljust(column_widths[i]) for i,field in
+            enumerate(selection['total'].printable_fields())
+            )
         print(line[:options.short])
 
 def create_option_parser():
@@ -394,6 +397,6 @@ if '__main__' == __name__:
     sorted_results = sort_and_reduce(results, options)
 
     if options.json:
-        print(json.dumps(sorted_results,cls=util.ResultEncoder))
+        print(json.dumps(sorted_results, cls=util.ResultEncoder))
     else:
         print_selection(sorted_results, options)
