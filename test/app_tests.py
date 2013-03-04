@@ -1,11 +1,17 @@
 import unittest
 import json
+import sys
+import os
+
+# This is such a hack. I bet there is a better way to do this.
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'compass')))
 from app import app
+
 
 class TestCase(unittest.TestCase):
   def setUp(self):
     app.config['TESTING'] = True
-    app.config["TESTING_DATAFILE"] = "testing/testdata.json"
+    app.config["TESTING_DATAFILE"] = "../test/testdata.json"
     self.app = app.test_client()
 
   def tearDown(self):
@@ -13,7 +19,7 @@ class TestCase(unittest.TestCase):
 
   def test_empty_query(self):
     response = self.app.get("/result.json")
-    expected = json.loads(open("testing/expectations/noparam.expected").read())
+    expected = json.loads(open("test/expectations/noparam.expected").read())
     received = json.loads(response.data)
     self.assertItemsEqual(received,expected)
 
@@ -55,7 +61,7 @@ class TestCase(unittest.TestCase):
   def test_limit_dataset_size(self):
     received = json.loads(self.app.get("/result.json?top=5").data)
     self.assertEqual(len(received['results']),5)
-    expected = json.loads(open("testing/expectations/top5.expected").read())
+    expected = json.loads(open("test/expectations/top5.expected").read())
     self.assertItemsEqual(received,expected)
 
 if __name__ == '__main':
