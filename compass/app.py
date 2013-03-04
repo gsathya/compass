@@ -129,10 +129,9 @@ def json_result():
     else:
       stats = compass.RelayStats(options)
 
-    results = stats.select_relays(stats.relays, options)
+    results = compass.select_relays(stats.relays, options)
 
-    relays = stats.sort_and_reduce(results,
-                                   options)
+    relays = compass.sort_and_reduce(results, options)
 
     return Response(json.dumps(relays, cls=ResultEncoder), mimetype='application/json')
 
@@ -183,4 +182,4 @@ def result():
 if __name__ == '__main__':
     # Bind to PORT if defined, otherwise default to 5000.
     port = int(os.environ.get('PORT', 5000))
-    app.run(host='0.0.0.0', port=port)
+    app.run(host='0.0.0.0', port=port, debug=True)
