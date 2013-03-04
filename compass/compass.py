@@ -184,10 +184,9 @@ class RelayStats(object):
         total_relays.adv_bw += relay.adv_bw
         total_relays.cw += relay.cw
 
-        excluded_relays.nick = "(%d other %s)" % (
-                                  len(relay_set) - options.top,
-                                  filtered)
-        total_relays.nick = "(total in selection)"
+      excluded_relays.nick = "(%d other %s)" % (len(relay_set) -
+                                                options.top, filtered)
+      total_relays.nick = "(total in selection)"
 
       # Only include the excluded line if
       if len(relay_set) <= options.top:
