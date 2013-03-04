@@ -93,40 +93,6 @@ class RelayStats(object):
             self._relays[key] = []
         self._relays[key].append(relay)
 
-    def print_selection(self,selection,options):
-        """
-        Print the selection returned by sort_and_reduce relays into a
-        string for the command line version.
-        """
-        column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
-        headings = ["CW","adv_bw","P_guard","P_middle", "P_exit", "Nickname",
-                    "Link" if options.links else "Fingerprint",
-                    "Exit","Guard","CC", "Autonomous System"]
-
-        #Print the header
-        header = "".join(word.ljust(column_widths[i]) for i,word in enumerate(headings))
-        print(header[:options.short])
-
-        for relay in selection['results']:
-            line = "".join(field.ljust(column_widths[i])
-                  for i,field in
-                  enumerate(relay.printable_fields(options.links)))
-            print(line[:options.short])
-
-        #Print the 'excluded' set if we have it
-        if selection['excluded']:
-            line = "".join(field.ljust(column_widths[i])
-                  for i,field in
-                  enumerate(selection['excluded'].printable_fields()))
-            print(line[:options.short])
-
-        #Print the 'total' set if we have it
-        if selection['total']:
-            line = "".join(field.ljust(column_widths[i])
-                  for i,field in
-                  enumerate(selection['total'].printable_fields()))
-            print(line[:options.short])
-
     def sort_and_reduce(self, relay_set, options):
         """
         Take a set of relays (has already been grouped and
@@ -235,15 +201,17 @@ class RelayStats(object):
                     exits_in_group += 1
                 else:
                     result.exit = '-'
+
                 if 'Guard' in set(relay['flags']):
                     result.guard = 'Guard'
                     guards_in_group += 1
                 else:
                     result.guard = '-'
+
                 result.cc = relay.get('country', '??').upper()
                 result.as_no = relay.get('as_number', '??')
                 result.as_name = relay.get('as_name', '??')
-                result.as_info = "%s %s" %(result.as_no, result.as_name)
+                result.as_info = "%s %s" % (result.as_no, result.as_name)
                 ases_in_group.add(result.as_info)
                 relays_in_group += 1
 
@@ -270,6 +238,41 @@ class RelayStats(object):
             results.append(result)
 
         return results
+
+def print_selection(selection, options):
+    """
+    Print the selection returned by sort_and_reduce relays into a
+    string for the command line version.
+    """
+    column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
+    headings = ["CW","adv_bw","P_guard","P_middle", "P_exit", "Nickname",
+                "Link" if options.links else "Fingerprint",
+                "Exit","Guard","CC", "Autonomous System"]
+
+    #Print the header
+    header = "".join(word.ljust(column_widths[i]) for i,word in enumerate(headings))
+    print(header[:options.short])
+
+    for relay in selection['results']:
+        line = "".join(field.ljust(column_widths[i])
+              for i,field in
+              enumerate(relay.printable_fields(options.links)))
+        print(line[:options.short])
+
+    #Print the 'excluded' set if we have it
+    if selection['excluded']:
+        line = "".join(field.ljust(column_widths[i])
+              for i,field in
+              enumerate(selection['excluded'].printable_fields()))
+        print(line[:options.short])
+
+    #Print the 'total' set if we have it
+    if selection['total']:
+        line = "".join(field.ljust(column_widths[i])
+              for i,field in
+              enumerate(selection['total'].printable_fields()))
+        print(line[:options.short])
+
 
 def create_option_parser():
     parser = OptionParser()
@@ -403,4 +406,4 @@ if '__main__' == __name__:
     if options.json:
         print(json.dumps(sorted_results,cls=util.ResultEncoder))
     else:
-        stats.print_selection(sorted_results,options)
+        print_selection(sorted_results, options)
