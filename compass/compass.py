@@ -36,9 +36,9 @@ class RelayStats(object):
 
     @property
     def data(self):
-      if not self._data:
-        self._data = json.load(file(os.path.join(os.path.dirname(os.path.abspath(__file__)), self._datafile_name)))
-      return self._data
+        if not self._data:
+            self._data = json.load(file(os.path.join(os.path.dirname(os.path.abspath(__file__)), self._datafile_name)))
+        return self._data
 
     @property
     def relays(self):
@@ -94,182 +94,182 @@ class RelayStats(object):
         self._relays[key].append(relay)
 
     def print_selection(self,selection,options):
-      """
-      Print the selection returned by sort_and_reduce relays into a
-      string for the command line version.
-      """
-      column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
-      headings = ["CW","adv_bw","P_guard","P_middle", "P_exit", "Nickname",
-                  "Link" if options.links else "Fingerprint",
-                  "Exit","Guard","CC", "Autonomous System"]
+        """
+        Print the selection returned by sort_and_reduce relays into a
+        string for the command line version.
+        """
+        column_widths = [9,10,10,10,10,21,80 if options.links else 42,7,7,4,11]
+        headings = ["CW","adv_bw","P_guard","P_middle", "P_exit", "Nickname",
+                    "Link" if options.links else "Fingerprint",
+                    "Exit","Guard","CC", "Autonomous System"]
 
-      #Print the header
-      header = "".join(word.ljust(column_widths[i]) for i,word in enumerate(headings))
-      print(header[:options.short])
+        #Print the header
+        header = "".join(word.ljust(column_widths[i]) for i,word in enumerate(headings))
+        print(header[:options.short])
 
-      for relay in selection['results']:
-        line = "".join(field.ljust(column_widths[i])
-              for i,field in
-              enumerate(relay.printable_fields(options.links)))
-        print(line[:options.short])
+        for relay in selection['results']:
+            line = "".join(field.ljust(column_widths[i])
+                  for i,field in
+                  enumerate(relay.printable_fields(options.links)))
+            print(line[:options.short])
 
-      #Print the 'excluded' set if we have it
-      if selection['excluded']:
-        line = "".join(field.ljust(column_widths[i])
-              for i,field in
-              enumerate(selection['excluded'].printable_fields()))
-        print(line[:options.short])
+        #Print the 'excluded' set if we have it
+        if selection['excluded']:
+            line = "".join(field.ljust(column_widths[i])
+                  for i,field in
+                  enumerate(selection['excluded'].printable_fields()))
+            print(line[:options.short])
 
-      #Print the 'total' set if we have it
-      if selection['total']:
-        line = "".join(field.ljust(column_widths[i])
-              for i,field in
-              enumerate(selection['total'].printable_fields()))
-        print(line[:options.short])
+        #Print the 'total' set if we have it
+        if selection['total']:
+            line = "".join(field.ljust(column_widths[i])
+                  for i,field in
+                  enumerate(selection['total'].printable_fields()))
+            print(line[:options.short])
 
     def sort_and_reduce(self, relay_set, options):
-      """
-      Take a set of relays (has already been grouped and
-      filtered), sort it and return the ones requested
-      in the 'top' option.  Add index numbers to them as well.
+        """
+        Take a set of relays (has already been grouped and
+        filtered), sort it and return the ones requested
+        in the 'top' option.  Add index numbers to them as well.
 
-      Returns a hash with three values:
-        *results*: A list of Result objects representing the selected
-                   relays
-        *excluded*: A Result object representing the stats for the
-                    filtered out relays. May be None
-        *total*: A Result object representing the stats for all of the
-                 relays in this filterset.
-      """
-      output_relays = []
-      excluded_relays = None
-      total_relays = None
-
-      # We need a simple sorting key function
-      def sort_fn(r):
-        return getattr(r, options.sort)
-
-      relay_set.sort(key=sort_fn, reverse=options.sort_reverse)
-
-      if options.top < 0:
-        options.top = len(relay_set)
-
-      # Set up to handle the special lines at the bottom
-      # What is zero_probs? Maybe remove it?
-      excluded_relays = util.Result(zero_probs=True)
-      total_relays = util.Result(zero_probs=True)
-      if options.by_country and options.by_as:
-          filtered = "countries and ASes"
-      elif options.by_country:
-          filtered = "countries"
-      elif options.by_as:
-          filtered = "ASes"
-      else:
-          filtered = "relays"
-
-      # Add selected relays to the result set
-      for i, relay in enumerate(relay_set):
-        # We have no links if we're grouping
-        if options.by_country or options.by_as:
-          relay.link = False
-
-        if i < options.top:
-          relay.index = i + 1
-          output_relays.append(relay)
-
-        if i >= options.top:
-          excluded_relays.p_guard += relay.p_guard
-          excluded_relays.p_exit += relay.p_exit
-          excluded_relays.p_middle += relay.p_middle
-          excluded_relays.adv_bw += relay.adv_bw
-          excluded_relays.cw += relay.cw
-
-        total_relays.p_guard += relay.p_guard
-        total_relays.p_exit += relay.p_exit
-        total_relays.p_middle += relay.p_middle
-        total_relays.adv_bw += relay.adv_bw
-        total_relays.cw += relay.cw
-
-      excluded_relays.nick = "(%d other %s)" % (len(relay_set) -
-                                                options.top, filtered)
-      total_relays.nick = "(total in selection)"
-
-      # Only include the excluded line if
-      if len(relay_set) <= options.top:
+        Returns a hash with three values:
+            *results*: A list of Result objects representing the selected
+                relays
+            *excluded*: A Result object representing the stats for the
+                filtered out relays. May be None
+            *total*: A Result object representing the stats for all of the
+                relays in this filterset.
+        """
+        output_relays = []
         excluded_relays = None
-
-      # Only include the last line if
-      if total_relays.cw > 99.9:
         total_relays = None
 
-      return {
-          'results': output_relays,
-          'excluded': excluded_relays,
-          'total': total_relays
-          }
+        # We need a simple sorting key function
+        def sort_fn(r):
+            return getattr(r, options.sort)
+
+        relay_set.sort(key=sort_fn, reverse=options.sort_reverse)
+
+        if options.top < 0:
+            options.top = len(relay_set)
+
+        # Set up to handle the special lines at the bottom
+        # What is zero_probs? Maybe remove it?
+        excluded_relays = util.Result(zero_probs=True)
+        total_relays = util.Result(zero_probs=True)
+        if options.by_country and options.by_as:
+            filtered = "countries and ASes"
+        elif options.by_country:
+            filtered = "countries"
+        elif options.by_as:
+            filtered = "ASes"
+        else:
+            filtered = "relays"
+
+        # Add selected relays to the result set
+        for i, relay in enumerate(relay_set):
+            # We have no links if we're grouping
+            if options.by_country or options.by_as:
+                relay.link = False
+
+            if i < options.top:
+                relay.index = i + 1
+                output_relays.append(relay)
+
+            if i >= options.top:
+                excluded_relays.p_guard += relay.p_guard
+                excluded_relays.p_exit += relay.p_exit
+                excluded_relays.p_middle += relay.p_middle
+                excluded_relays.adv_bw += relay.adv_bw
+                excluded_relays.cw += relay.cw
+
+            total_relays.p_guard += relay.p_guard
+            total_relays.p_exit += relay.p_exit
+            total_relays.p_middle += relay.p_middle
+            total_relays.adv_bw += relay.adv_bw
+            total_relays.cw += relay.cw
+
+        excluded_relays.nick = "(%d other %s)" % (len(relay_set) -
+                                                  options.top, filtered)
+        total_relays.nick = "(total in selection)"
+
+        # Only include the excluded line if
+        if len(relay_set) <= options.top:
+            excluded_relays = None
+
+        # Only include the last line if
+        if total_relays.cw > 99.9:
+            total_relays = None
+
+        return {
+            'results': output_relays,
+            'excluded': excluded_relays,
+            'total': total_relays
+            }
 
 
     def select_relays(self, grouped_relays, options):
-      """
-      Return a Pythonic representation of the relays result set.
-      Return it as a set of Result objects.
-      """
-      results = []
+        """
+        Return a Pythonic representation of the relays result set.
+        Return it as a set of Result objects.
+        """
+        results = []
 
-      for group in grouped_relays.itervalues():
-        #Initialize some stuff
-        group_weights = dict.fromkeys(WEIGHTS, 0)
-        relays_in_group, exits_in_group, guards_in_group = 0, 0, 0
-        ases_in_group = set()
-        result = util.Result()
-        for relay in group:
-            for weight in WEIGHTS:
-                group_weights[weight] += relay.get(weight, 0)
+        for group in grouped_relays.itervalues():
+            #Initialize some stuff
+            group_weights = dict.fromkeys(WEIGHTS, 0)
+            relays_in_group, exits_in_group, guards_in_group = 0, 0, 0
+            ases_in_group = set()
+            result = util.Result()
+            for relay in group:
+                for weight in WEIGHTS:
+                    group_weights[weight] += relay.get(weight, 0)
 
-            result.nick = relay['nickname']
-            result.fp = relay['fingerprint']
-            result.link = options.links
+                result.nick = relay['nickname']
+                result.fp = relay['fingerprint']
+                result.link = options.links
 
-            if 'Exit' in set(relay['flags']) and not 'BadExit' in set(relay['flags']):
-                result.exit = 'Exit'
-                exits_in_group += 1
-            else:
-                result.exit = '-'
-            if 'Guard' in set(relay['flags']):
-                result.guard = 'Guard'
-                guards_in_group += 1
-            else:
-                result.guard = '-'
-            result.cc = relay.get('country', '??').upper()
-            result.as_no = relay.get('as_number', '??')
-            result.as_name = relay.get('as_name', '??')
-            result.as_info = "%s %s" %(result.as_no, result.as_name)
-            ases_in_group.add(result.as_info)
-            relays_in_group += 1
+                if 'Exit' in set(relay['flags']) and not 'BadExit' in set(relay['flags']):
+                    result.exit = 'Exit'
+                    exits_in_group += 1
+                else:
+                    result.exit = '-'
+                if 'Guard' in set(relay['flags']):
+                    result.guard = 'Guard'
+                    guards_in_group += 1
+                else:
+                    result.guard = '-'
+                result.cc = relay.get('country', '??').upper()
+                result.as_no = relay.get('as_number', '??')
+                result.as_name = relay.get('as_name', '??')
+                result.as_info = "%s %s" %(result.as_no, result.as_name)
+                ases_in_group.add(result.as_info)
+                relays_in_group += 1
 
-        # If we want to group by things, we need to handle some fields
-        # specially
-        if options.by_country or options.by_as:
-            result.nick = "*"
-            result.fp = "(%d relays)" % relays_in_group
-            result.exit = "(%d)" % exits_in_group
-            result.guard = "(%d)" % guards_in_group
-            if not options.by_as and not options.ases:
-                result.as_info = "(%s)" % len(ases_in_group)
-            if not options.by_country and not options.country:
-                options.country = "*"
+            # If we want to group by things, we need to handle some fields
+            # specially
+            if options.by_country or options.by_as:
+                result.nick = "*"
+                result.fp = "(%d relays)" % relays_in_group
+                result.exit = "(%d)" % exits_in_group
+                result.guard = "(%d)" % guards_in_group
+                if not options.by_as and not options.ases:
+                    result.as_info = "(%s)" % len(ases_in_group)
+                if not options.by_country and not options.country:
+                    options.country = "*"
 
-        #Include our weight values
-        for weight in group_weights.iterkeys():
-          result['cw'] = group_weights['consensus_weight_fraction'] * 100.0
-          result['adv_bw'] = group_weights['advertised_bandwidth_fraction'] * 100.0
-          result['p_guard'] = group_weights['guard_probability'] * 100.0
-          result['p_middle'] = group_weights['middle_probability'] * 100.0
-          result['p_exit'] = group_weights['exit_probability'] * 100.0
+            #Include our weight values
+            for weight in group_weights.iterkeys():
+                result['cw'] = group_weights['consensus_weight_fraction'] * 100.0
+                result['adv_bw'] = group_weights['advertised_bandwidth_fraction'] * 100.0
+                result['p_guard'] = group_weights['guard_probability'] * 100.0
+                result['p_middle'] = group_weights['middle_probability'] * 100.0
+                result['p_exit'] = group_weights['exit_probability'] * 100.0
 
-        results.append(result)
+            results.append(result)
 
-      return results
+        return results
 
 def create_option_parser():
     parser = OptionParser()
@@ -350,29 +350,29 @@ def download_details_file():
     details_file.close()
 
 def fix_exit_filter_options(options):
-  """
-  Translate the old-style exit filter options into
-  the new format (as received on the front end).
-  """
-  if options.exit_filter != "all_relays":
-    # We just accept this option's value
+    """
+    Translate the old-style exit filter options into
+    the new format (as received on the front end).
+    """
+    if options.exit_filter != "all_relays":
+        # We just accept this option's value
+        return options
+
+    fast_exit_options = 0
+    if options.fast_exits_only:
+        options.exit_filter = "fast_exits_only"
+        fast_exit_options += 1
+    if options.almost_fast_exits_only:
+        options.exit_filter = "almost_fast_exits_only"
+        fast_exit_options += 1
+    if options.fast_exits_only_any_network:
+        options.exit_filter = "fast_exits_only_any_network"
+        fast_exit_options += 1
+
+    if fast_exit_options > 1:
+        raise Exception
+
     return options
-
-  fast_exit_options = 0
-  if options.fast_exits_only:
-    options.exit_filter = "fast_exits_only"
-    fast_exit_options += 1
-  if options.almost_fast_exits_only:
-    options.exit_filter = "almost_fast_exits_only"
-    fast_exit_options += 1
-  if options.fast_exits_only_any_network:
-    options.exit_filter = "fast_exits_only_any_network"
-    fast_exit_options += 1
-
-  if fast_exit_options > 1:
-    raise Exception
-
-  return options
 
 
 if '__main__' == __name__:
@@ -384,7 +384,7 @@ if '__main__' == __name__:
         parser.error("Not a valid fingerprint or nickname: %s" % options.family)
 
     try:
-      options = fix_exit_filter_options(options)
+        options = fix_exit_filter_options(options)
     except:
         parser.error("Can only filter by one fast-exit option.")
 
@@ -401,6 +401,6 @@ if '__main__' == __name__:
     sorted_results = stats.sort_and_reduce(results,options)
 
     if options.json:
-      print(json.dumps(sorted_results,cls=util.ResultEncoder))
+        print(json.dumps(sorted_results,cls=util.ResultEncoder))
     else:
-      stats.print_selection(sorted_results,options)
+        stats.print_selection(sorted_results,options)
