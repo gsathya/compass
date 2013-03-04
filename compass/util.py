@@ -1,5 +1,13 @@
 import json
 import shlex
+import urllib
+
+def download_details_file():
+    url = urllib.urlopen('https://onionoo.torproject.org/details?type=relay')
+    details_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json'), 'w')
+    details_file.write(url.read())
+    url.close()
+    details_file.close()
 
 def JSON(val):
   try:

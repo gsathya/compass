@@ -11,7 +11,6 @@ import operator
 import sys
 import util
 import os
-import urllib
 import re
 import itertools
 
@@ -273,7 +272,6 @@ def print_selection(selection, options):
               enumerate(selection['total'].printable_fields()))
         print(line[:options.short])
 
-
 def create_option_parser():
     parser = OptionParser()
     parser.add_option("-d", "--download", action="store_true",
@@ -345,13 +343,6 @@ def create_option_parser():
     parser.add_option_group(group)
     return parser
 
-def download_details_file():
-    url = urllib.urlopen('https://onionoo.torproject.org/details?type=relay')
-    details_file = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json'), 'w')
-    details_file.write(url.read())
-    url.close()
-    details_file.close()
-
 def fix_exit_filter_options(options):
     """
     Translate the old-style exit filter options into
@@ -377,7 +368,6 @@ def fix_exit_filter_options(options):
 
     return options
 
-
 if '__main__' == __name__:
     parser = create_option_parser()
     (options, args) = parser.parse_args()
@@ -392,7 +382,7 @@ if '__main__' == __name__:
         parser.error("Can only filter by one fast-exit option.")
 
     if options.download:
-        download_details_file()
+        util.download_details_file()
         print "Downloaded details.json.  Re-run without --download option."
         exit()
     if not os.path.exists(os.path.join(os.path.dirname(os.path.abspath(__file__)), 'details.json')):
