@@ -18,6 +18,14 @@ import itertools
 from filters import *
 from optparse import OptionParser, OptionGroup
 
+WEIGHTS = [
+    'consensus_weight_fraction',
+    'advertised_bandwidth_fraction',
+    'guard_probability',
+    'middle_probability',
+    'exit_probability'
+]
+
 class RelayStats(object):
     def __init__(self, options, custom_datafile="details.json"):
         self._data = None
@@ -84,8 +92,6 @@ class RelayStats(object):
         if key not in self._relays:
             self._relays[key] = []
         self._relays[key].append(relay)
-
-    WEIGHTS = ['consensus_weight_fraction', 'advertised_bandwidth_fraction', 'guard_probability', 'middle_probability', 'exit_probability']
 
     def print_selection(self,selection,options):
       """
@@ -205,17 +211,19 @@ class RelayStats(object):
 
     def select_relays(self, grouped_relays, options):
       """
-      Return a Pythonic representation of the relays result set. Return it as a set of Result objects.
+      Return a Pythonic representation of the relays result set.
+      Return it as a set of Result objects.
       """
       results = []
+
       for group in grouped_relays.itervalues():
         #Initialize some stuff
-        group_weights = dict.fromkeys(RelayStats.WEIGHTS, 0)
+        group_weights = dict.fromkeys(WEIGHTS, 0)
         relays_in_group, exits_in_group, guards_in_group = 0, 0, 0
         ases_in_group = set()
         result = util.Result()
         for relay in group:
-            for weight in RelayStats.WEIGHTS:
+            for weight in WEIGHTS:
                 group_weights[weight] += relay.get(weight, 0)
 
             result.nick = relay['nickname']
