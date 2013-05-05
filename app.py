@@ -17,7 +17,7 @@ class Opt(object):
       'links':( Boolean, True ),
       'sort':( NullFn, "cw" ),
       'sort_reverse':( Boolean, True ),
-      'top':( Int , 10),
+      'top':( Int , -1),
       'family':( NullFn, "" ),
       'ases':( List, [] ),
       'country':( JSON, [] ),
