@@ -37,3 +37,6 @@ WSGIScriptAlias /compass /srv/compass.torproject.org/compass/app.wsgi
     Allow from all
 </Directory>
 ```
+License
+====
+Licensed under MIT License
